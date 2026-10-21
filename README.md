@@ -1,0 +1,75 @@
+# local-logger
+
+A capped, persistent on-device log for browser diagnostics reports. It's kept in `localStorage`, so a report still covers what happened before a reload, an app update, or a phone killing a backgrounded tab. Framework-agnostic, with optional React hooks.
+
+```bash
+npm install local-logger
+```
+
+ESM only, with types included. No dependencies; React 18 or 19 is an optional peer, needed only for `local-logger/react`.
+
+## Usage
+
+```ts
+import { LocalLogger } from 'local-logger'
+
+type Scope = 'api' | 'auth' | 'sync'
+
+export const log = new LocalLogger<Scope>({ storageKey: 'my-app-log' })
+
+log.info('auth', 'signIn', { method: 'google' })
+log.warn('sync', 'retry', { attempt: 3 })
+fetchItems().catch(log.catchTo('api', 'items.list:failed'))
+
+// Later, for a "send diagnostics" button:
+const report = JSON.stringify(log.getEntries(), null, 2)
+```
+
+Logging only appends to memory. The log is written to storage when the page is hidden or unloads, and read back only when `getEntries` asks for it, so app load parses nothing and a busy log costs no storage writes.
+
+## API
+
+### `new LocalLogger<Scope>(options)`
+
+| Option | Default | What it does |
+| --- | --- | --- |
+| `storageKey` | (required) | The `localStorage` key the log persists under. |
+| `maxEntries` | `300` | How many entries to keep; the oldest go first. |
+| `maxStoredLength` | `500_000` | How long the stored log may grow, in characters of its JSON, so one large `detail` can't fill the origin's storage quota. The oldest entries go first, and an entry too long to fit on its own is never stored. |
+
+Safe to construct during server rendering, where it logs to memory only.
+
+| Method | What it does |
+| --- | --- |
+| `info(scope, action, detail?)` | Logs an entry. |
+| `warn(scope, action, detail?)` | Logs an entry at `warn`. |
+| `error(scope, action, error, extra?)` | Logs a failure at `error`, with the thrown value spelled out as `message` and `stack` (an `Error` serializes to `{}` in JSON) beside `extra`. |
+| `catchTo(scope, action)` | A `.catch` handler that logs the rejection via `error` and swallows it. |
+| `withScope(scope)` | The same four methods with `scope` already filled in, for a module that logs under one scope throughout. |
+| `getEntries()` | Every entry still kept, across sessions and tabs, oldest first. |
+| `clear()` | Empties the log, both what's stored and what this page hasn't saved yet. |
+
+Each entry is a `LogEntry`: `{ timestamp, level?, scope, action, detail? }`, where `timestamp` is an ISO string and `level` is left out at `info`, so only the levels worth noticing show.
+
+Saving runs on `visibilitychange` to hidden as well as `pagehide`, since a phone can kill a backgrounded app without `pagehide` ever firing. Each save re-reads storage first, so tabs open at once all keep what they logged.
+
+## React
+
+```ts
+import { createLocalLogger } from 'local-logger/react'
+
+export const { logger: log, useLogDuration, useLogOnChange, useLogOnce } =
+  createLocalLogger<Scope>({ storageKey: 'my-app-log' })
+```
+
+`createLoggerHooks(logger)` gives the same hooks for a `LocalLogger` you already have.
+
+| Hook | What it does |
+| --- | --- |
+| `useLogDuration(scope, action, active)` | Logs `<action>:start` when `active` turns true, and `<action>:end` with the milliseconds it lasted when it turns false or the component unmounts. |
+| `useLogOnChange(scope, action, value)` | Logs `value` on mount and whenever it changes. Compared by identity, so pass a primitive or a stable reference. |
+| `useLogOnce(scope, action, when, detail?)` | Logs once, the first render `when` is true, with `detail` as it stands on that render. |
+
+## License
+
+MIT

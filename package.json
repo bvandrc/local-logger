@@ -28,8 +28,8 @@
       "default": "./dist/index.mjs"
     },
     "./react": {
-      "types": "./dist/react.d.mts",
-      "default": "./dist/react.mjs"
+      "types": "./dist/local-logger-react.d.mts",
+      "default": "./dist/local-logger-react.mjs"
     }
   },
   "files": [

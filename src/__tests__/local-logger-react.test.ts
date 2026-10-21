@@ -1,7 +1,7 @@
 import { renderHook } from '@testing-library/react'
 
 import { LocalLogger } from '../local-logger'
-import { createLocalLogger, createLoggerHooks } from '../react'
+import { createLocalLogger, createLoggerHooks } from '../local-logger-react'
 
 /** The log every hook case writes to, kept apart from the core suite's. */
 const {

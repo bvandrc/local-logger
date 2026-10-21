@@ -8,8 +8,7 @@
     "localstorage",
     "diagnostics",
     "breadcrumbs",
-    "offline-first",
-    "pwa",
+    "browser",
     "react",
     "react-hooks"
   ],

@@ -5,6 +5,7 @@
   "keywords": [
     "logger",
     "logging",
+    "debug-logging",
     "localstorage",
     "diagnostics",
     "breadcrumbs",

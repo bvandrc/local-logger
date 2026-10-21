@@ -61,6 +61,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2",
+    "@bvandrc/react-ui-hooks": "^1",
     "@testing-library/dom": "^10",
     "@testing-library/react": "^16",
     "@types/react": "^18",

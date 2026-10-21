@@ -31,7 +31,7 @@ Bump `version` in `package.json`, merge, then publish a GitHub release tagged `v
 ## Gotchas
 
 - **The core needs no React**: `src/local-logger.ts` and everything it imports must stay free of React, which is only an optional peer. React code goes in `src/react.ts`, published as `local-logger/react`.
-- **No dependencies**: Anything added to `dependencies` ships to every consumer of a package whose pitch is having none, so prefer a local copy of a small helper (as `src/utils/page.ts` is).
+- **No dependencies**: Anything added to `dependencies` ships to every consumer of a package whose pitch is having none. A helper from `@bvandrc/react-ui-hooks` comes in as a dev dependency instead, which the build inlines into `dist/` (as `onAppLeave` is). `tsdown.config.ts`'s `deps.onlyBundle` and `deps.onlyImport` fail the build if anything else is bundled, or if the output imports anything but React.
 - **The public API is `src/index.ts` and `src/react.ts`**: Removing or renaming an export from either is a breaking change. Below 1.0 that means a minor bump; from 1.0, a major.
 - **The stored shape is an API too**: A newer version reads what an older one wrote to `localStorage`, so a change to `LogEntry` has to keep reading entries without it.
 - **Unit tests share a worker**: `isolate` is off and files run in a shuffled order, so `vitest.setup.ts` clears `localStorage` and fake timers after every case, but a `vi.spyOn` or a module's own state is the test's to undo. A `LocalLogger` built in a test keeps listening for `pagehide` for the rest of the run. Replay a seed-dependent failure with `--sequence.seed=<n>`.

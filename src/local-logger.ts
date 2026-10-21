@@ -5,7 +5,8 @@
  * app being closed and reopened.
  */
 
-import { onAppLeave } from './utils/page'
+// A dev dependency, inlined by the build -- see `tsdown.config.ts`.
+import { onAppLeave } from '@bvandrc/react-ui-hooks'
 
 /** `info` is the default, and the one level an entry leaves unsaid. */
 export type LogLevel = 'info' | 'warn' | 'error'
@@ -46,13 +47,10 @@ const readStoredEntries = (storageKey: string): LogEntry[] => {
   }
 }
 
-/**
- * The newest of `entries`, as one JSON array no longer than `maxLength`.
- *
- * Each entry is serialized once, and the array is joined by hand rather than
- * serialized again, so the length counted is the length written.
- */
+/** The newest of `entries`, as one JSON array no longer than `maxLength`. */
 const serializeNewest = (entries: LogEntry[], maxLength: number) => {
+  // Each entry is serialized once, and the array is joined by hand rather than
+  // serialized again, so the length counted is the length written.
   // The array's brackets.
   let length = 2
   const kept: string[] = []

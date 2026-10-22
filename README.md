@@ -35,9 +35,6 @@ Logging only appends to memory. The log is written to storage when the page is h
 | --- | --- | --- |
 | `storageKey` | (required) | The `localStorage` key the log persists under. |
 | `maxEntries` | `300` | How many entries to keep; the oldest go first. |
-| `maxStoredLength` | `500_000` | How long the stored log may grow, in characters of its JSON, so one large `detail` can't fill the origin's storage quota. The oldest entries go first, and an entry too long to fit on its own is never stored. |
-
-Safe to construct during server rendering, where it logs to memory only.
 
 | Method | What it does |
 | --- | --- |
@@ -47,7 +44,6 @@ Safe to construct during server rendering, where it logs to memory only.
 | `catchTo(scope, action)` | A `.catch` handler that logs the rejection via `error` and swallows it. |
 | `withScope(scope)` | The same four methods with `scope` already filled in, for a module that logs under one scope throughout. |
 | `getEntries()` | Every entry still kept, across sessions and tabs, oldest first. |
-| `clear()` | Empties the log, both what's stored and what this page hasn't saved yet. |
 
 Each entry is a `LogEntry`: `{ timestamp, level?, scope, action, detail? }`, where `timestamp` is an ISO string and `level` is left out at `info`, so only the levels worth noticing show.
 
@@ -61,8 +57,6 @@ import { createLocalLogger } from 'local-logger/react'
 export const { logger: log, useLogDuration, useLogOnChange, useLogOnce } =
   createLocalLogger<Scope>({ storageKey: 'my-app-log' })
 ```
-
-`createLoggerHooks(logger)` gives the same hooks for a `LocalLogger` you already have.
 
 | Hook | What it does |
 | --- | --- |

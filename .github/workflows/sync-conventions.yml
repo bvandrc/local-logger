@@ -1,0 +1,19 @@
+name: Sync Conventions
+
+on:
+  schedule:
+    - cron: '0 9 * * 1' # Mondays, 09:00 UTC
+  workflow_dispatch: # Allows manual triggering
+
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write # For apply-with-claude
+
+jobs:
+  sync:
+    uses: bvandrc/bvandrc-conventions/.github/workflows/sync.yml@main
+    with:
+      files: all.md typescript.md react.md ts-testing-all.md ts-unit-testing.md biome.base.json
+      apply-with-claude: true
+    secrets: inherit

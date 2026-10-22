@@ -3,7 +3,8 @@ import { LocalLogger, type LogEntry } from '../local-logger'
 const STORAGE_KEY = 'test-local-log'
 
 /** A logger as a page load gets one, persisting under `STORAGE_KEY`. */
-const createLogger = () => new LocalLogger({ storageKey: STORAGE_KEY })
+const createLogger = (options?: { maxStoredLength?: number }) =>
+  new LocalLogger({ storageKey: STORAGE_KEY, ...options })
 
 const localLog = createLogger()
 
@@ -50,6 +51,34 @@ describe('LocalLogger.withScope', () => {
       action: 'scoped:warn',
       detail: { id: 1 },
     })
+  })
+})
+
+describe('LocalLogger.clear', () => {
+  it('empties what is stored and what is not yet saved', () => {
+    const logger = createLogger()
+    logger.info('cart', 'clear:saved')
+    leavePage()
+    logger.info('cart', 'clear:unsaved')
+    logger.clear()
+    expect(logger.getEntries()).toEqual([])
+    leavePage()
+    expect(createLogger().getEntries()).toEqual([])
+  })
+})
+
+describe('LocalLogger.getEntries', () => {
+  it('orders entries by when they were logged, across tabs', () => {
+    const STORED = [
+      { timestamp: '2026-01-01T00:00:02.000Z', scope: 'cart', action: 'b' },
+      // A second tab wrote after the first, but had logged earlier.
+      { timestamp: '2026-01-01T00:00:01.000Z', scope: 'cart', action: 'a' },
+    ] satisfies LogEntry[]
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(STORED))
+    const actions = createLogger()
+      .getEntries()
+      .map(({ action }) => action)
+    expect(actions).toEqual(['a', 'b'])
   })
 })
 
@@ -120,5 +149,44 @@ describe('LocalLogger persistence', () => {
   it('starts over from a stored value it cannot read', () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ not: 'a list' }))
     expect(reload().getEntries()).toEqual([])
+  })
+
+  it('stores only the newest entries that fit in maxStoredLength', () => {
+    const MAX_STORED_LENGTH = 1000
+    const logger = reload({ maxStoredLength: MAX_STORED_LENGTH })
+    for (let index = 0; index < 50; index++) {
+      logger.info('cart', `fit:${index}`)
+    }
+    leavePage()
+    const stored = localStorage.getItem(STORAGE_KEY) ?? ''
+    expect(stored.length).toBeLessThanOrEqual(MAX_STORED_LENGTH)
+    const actions = reload()
+      .getEntries()
+      .map(({ action }) => action)
+    // The newest, not the oldest.
+    expect(actions.at(-1)).toBe('fit:49')
+    expect(actions).not.toContain('fit:0')
+  })
+
+  it('never stores an entry too long to fit on its own', () => {
+    const logger = reload({ maxStoredLength: 1000 })
+    logger.info('cart', 'small:before')
+    logger.info('cart', 'huge', 'x'.repeat(2000))
+    leavePage()
+    const actions = reload()
+      .getEntries()
+      .map(({ action }) => action)
+    expect(actions).not.toContain('huge')
+    // Not pushed out by the entry that was skipped.
+    expect(actions).toContain('small:before')
+  })
+
+  it('logs to memory where there is no document, as on a server', () => {
+    vi.stubGlobal('document', undefined)
+    const logger = reload()
+    logger.info('app', 'server:render')
+    expect(logger.getEntries().at(-1)).toMatchObject({
+      action: 'server:render',
+    })
   })
 })

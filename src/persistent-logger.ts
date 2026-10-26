@@ -7,7 +7,14 @@
 
 // A dev dependency, inlined by the build -- see `tsdown.config.ts`.
 import { onAppLeave } from '@bvandrc/react-ui-hooks'
-import { isError, isNotNil, sortBy, takeRightWhile } from 'es-toolkit'
+import {
+  isError,
+  isNotNil,
+  orderBy,
+  sortBy,
+  sumBy,
+  takeRightWhile,
+} from 'es-toolkit'
 import { serializeError } from 'serialize-error'
 
 import { toLoggable } from './utils'
@@ -38,11 +45,12 @@ export interface PersistentLoggerOptions {
   /**
    * How long the stored log may grow, in characters of its JSON.
    *
-   * The oldest entries go first, and an entry too long to fit on its own is
-   * stored with its `detail` replaced by `'[Omitted: too long to store]'`. The
-   * default is a tenth of what browsers commonly give an origin's
-   * localStorage. Must be a positive integer: the constructor throws a
-   * `RangeError` otherwise.
+   * Past it, the largest `detail`s are stored as
+   * `'[Omitted: too long to store]'` first, an older one sooner than a newer
+   * one of the same size, and the oldest entries go only once no `detail`
+   * large enough to be worth dropping is left. The default is a tenth of what
+   * browsers commonly give an origin's localStorage. Must be a positive
+   * integer: the constructor throws a `RangeError` otherwise.
    *
    * @default 500_000
    */
@@ -55,30 +63,85 @@ export interface PersistentLoggerOptions {
   logToConsole?: boolean
 }
 
-/** The newest of `entries`, as one JSON array no longer than `maxLength`. */
+/** What a `detail` is stored as once it has given way to keep the log short. */
+const OMITTED_DETAIL = '[Omitted: too long to store]'
+
+/**
+ * The fewest characters dropping a `detail` must save for it to give way.
+ *
+ * Below this, dropping it would barely help, so the oldest entries go instead.
+ */
+const MIN_DETAIL_SAVING = 100
+
+/**
+ * How many times its size the oldest entry's `detail` counts for when
+ * choosing which to drop, against the newest's once.
+ */
+const OLDEST_DETAIL_WEIGHT = 4
+
+/** `entry` as JSON, with its `detail` replaced by `OMITTED_DETAIL`. */
+const serializeWithoutDetail = (entry: LogEntry) =>
+  JSON.stringify({ ...entry, detail: OMITTED_DETAIL })
+
+/**
+ * The newest of `entries`, as one JSON array no longer than `maxLength`.
+ *
+ * Large `detail`s give way first, an older one sooner than a newer one of the
+ * same size, and the oldest entries go only once no `detail` worth dropping is
+ * left.
+ */
 const serializeNewest = (entries: LogEntry[], maxLength: number) => {
   // The array is joined by hand rather than serialized again, so the length
   // counted is the length written.
   const fits = (serialized: string) => serialized.length + 2 <= maxLength
-  const fitting = entries
+  const items = entries
     .map((entry) => {
       const serialized = JSON.stringify(entry)
       // Too long on its own, with the brackets: its `detail` is dropped, so it
       // can't push out everything older, and it's skipped if that still won't
       // fit.
-      return fits(serialized)
-        ? serialized
-        : JSON.stringify({ ...entry, detail: '[Omitted: too long to store]' })
+      return {
+        entry,
+        serialized: fits(serialized)
+          ? serialized
+          : serializeWithoutDetail(entry),
+      }
     })
-    .filter(fits)
+    .filter(({ serialized }) => fits(serialized))
   // The opening bracket, then each entry with the comma or closing bracket
   // after it.
-  let length = 1
-  const kept = takeRightWhile(fitting, (serialized) => {
-    length += serialized.length + 1
-    return length <= maxLength
+  let length = 1 + sumBy(items, ({ serialized }) => serialized.length + 1)
+
+  if (length > maxLength) {
+    // By position rather than timestamp, so the weight runs evenly from the
+    // newest's 1 to the oldest's `OLDEST_DETAIL_WEIGHT`.
+    const oldestAge = Math.max(items.length - 1, 1)
+    const droppable = items.flatMap((item, index) => {
+      const withoutDetail = serializeWithoutDetail(item.entry)
+      const saving = item.serialized.length - withoutDetail.length
+      if (saving < MIN_DETAIL_SAVING) return []
+      const age = (items.length - 1 - index) / oldestAge
+      const weight = 1 + (OLDEST_DETAIL_WEIGHT - 1) * age
+      return [{ item, withoutDetail, saving, score: saving * weight }]
+    })
+    for (const { item, withoutDetail, saving } of orderBy(
+      droppable,
+      ['score'],
+      ['desc']
+    )) {
+      if (length <= maxLength) break
+      item.serialized = withoutDetail
+      length -= saving
+    }
+  }
+
+  // Still too long: the oldest entries go.
+  let keptLength = 1
+  const kept = takeRightWhile(items, ({ serialized }) => {
+    keptLength += serialized.length + 1
+    return keptLength <= maxLength
   })
-  return `[${kept.join(',')}]`
+  return `[${kept.map(({ serialized }) => serialized).join(',')}]`
 }
 
 /** Throws a `RangeError` unless the option `name` is a positive integer. */

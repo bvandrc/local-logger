@@ -12,6 +12,19 @@ const getLastEntry = () => localLog.getEntries().at(-1)
 /** Fires what a page leaving fires, so every logger still listening writes. */
 const leavePage = () => window.dispatchEvent(new Event('pagehide'))
 
+describe('LocalLogger', () => {
+  it('throws when maxEntries is not above 0', () => {
+    // NaN compares false against 0 either way, so it needs catching too.
+    for (const MAX_ENTRIES of [0, -1, Number.NaN]) {
+      expect(
+        () =>
+          new LocalLogger({ storageKey: STORAGE_KEY, maxEntries: MAX_ENTRIES }),
+        String(MAX_ENTRIES)
+      ).toThrow(RangeError)
+    }
+  })
+})
+
 describe('LocalLogger.error', () => {
   it('logs an Error as its message and stack, beside extra', () => {
     const ERROR = new Error('boom')
@@ -196,16 +209,6 @@ describe('LocalLogger persistence', () => {
       first: { id: 7 },
       second: { id: 7 },
     })
-  })
-
-  it('keeps nothing when maxEntries is 0', () => {
-    const STORED = [
-      { timestamp: new Date(0).toISOString(), scope: 'cart', action: 'stored' },
-    ] satisfies LogEntry[]
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(STORED))
-    const logger = new LocalLogger({ storageKey: STORAGE_KEY, maxEntries: 0 })
-    logger.info('cart', 'kept:none')
-    expect(logger.getEntries()).toEqual([])
   })
 
   it('starts over from a stored value it cannot read', () => {

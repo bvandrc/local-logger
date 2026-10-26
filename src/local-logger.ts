@@ -7,6 +7,7 @@
 
 // A dev dependency, inlined by the build -- see `tsdown.config.ts`.
 import { onAppLeave } from '@bvandrc/react-ui-hooks'
+import { mapValues } from 'es-toolkit'
 
 /** `info` is the default, and the one level an entry leaves unsaid. */
 export type LogLevel = 'info' | 'warn' | 'error'
@@ -60,11 +61,9 @@ const toLoggable = (
   ancestors.add(value)
   const copy = Array.isArray(value)
     ? value.map((item) => toLoggable(item, ancestors))
-    : Object.fromEntries(
-        Object.entries({
-          ...value,
-          ...(value instanceof Error && errorFields(value)),
-        }).map(([key, item]) => [key, toLoggable(item, ancestors)])
+    : mapValues(
+        { ...value, ...(value instanceof Error && errorFields(value)) },
+        (item) => toLoggable(item, ancestors)
       )
   // Only an ancestor is circular: the same object twice side by side is not.
   ancestors.delete(value)

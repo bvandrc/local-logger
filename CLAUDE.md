@@ -25,7 +25,7 @@ Conventions live outside this file, synced from https://github.com/bvandrc/bvand
 
 ## Releasing
 
-Bump `version` in `package.json`, merge, then publish a GitHub release tagged `v<version>`. `.github/workflows/release.yml` checks the tag matches and runs `pnpm publish` with provenance.
+Bump `version` in `package.json`, merge, then publish a GitHub release tagged `v<version>`. `.github/workflows/release.yml` checks the tag matches and runs `pnpm stage publish` with provenance, which leaves the version staged: approve it on npmjs.com with 2FA to publish it.
 
 ## Gotchas
 

@@ -7,7 +7,7 @@
 
 // A dev dependency, inlined by the build -- see `tsdown.config.ts`.
 import { onAppLeave } from '@bvandrc/react-ui-hooks'
-import { isError, sortBy } from 'es-toolkit'
+import { isError, isNotNil, sortBy } from 'es-toolkit'
 import { serializeError } from 'serialize-error'
 
 import { toLoggable } from './utils'
@@ -128,9 +128,8 @@ export class PersistentLogger<Scope extends string = string> {
     details: unknown[]
   ) {
     if (!this.logToConsole) return
-    // Left out rather than printed as `undefined` when not given.
-    const given = details.filter((detail) => detail !== undefined)
-    console[level](`[${scope}] ${action}`, ...given)
+    // A detail not given is left out, rather than printed as `undefined`.
+    console[level](`[${scope}] ${action}`, ...details.filter(isNotNil))
   }
 
   private push(level: LogLevel, scope: Scope, action: string, detail: unknown) {

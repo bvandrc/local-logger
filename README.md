@@ -33,7 +33,7 @@ Logging only appends to memory. The log is written to storage when the page is h
 
 | Option | Default | What it does |
 | --- | --- | --- |
-| `storageKey` | (required) | The `localStorage` key the log persists under. |
+| `storageKey` | (required) | The `localStorage` key the log persists under. Must not be empty. |
 | `maxEntries` | `300` | How many entries to keep; the oldest go first. Must be a positive integer. |
 
 | Method | What it does |

@@ -34,7 +34,7 @@ Logging only appends to memory. The log is written to storage when the page is h
 | Option | Default | What it does |
 | --- | --- | --- |
 | `storageKey` | (required) | The `localStorage` key the log persists under. |
-| `maxEntries` | `300` | How many entries to keep; the oldest go first. Must be a positive integer, or the constructor throws a `RangeError`. |
+| `maxEntries` | `300` | How many entries to keep; the oldest go first. Must be a positive integer. |
 
 | Method | What it does |
 | --- | --- |

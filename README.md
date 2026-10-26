@@ -35,6 +35,7 @@ Logging only appends to memory. The log is written to storage when the page is h
 | --- | --- | --- |
 | `storageKey` | (required) | The `localStorage` key the log persists under. Must not be empty. |
 | `maxEntries` | `300` | How many entries to keep; the oldest go first. Must be a positive integer. |
+| `maxStoredLength` | `500_000` | How long the stored log may grow, in characters of its JSON, so one large `detail` can't fill the origin's storage quota. Past it, the largest `detail`s are stored as `'[Omitted: too long to store]'` first, an older one sooner than a newer one of the same size, and the oldest entries go only once no `detail` large enough to be worth dropping is left. Must be a positive integer. |
 | `logToConsole` | `false` | Whether to echo each entry to `console.info`, `console.warn`, or `console.error` as it's logged. |
 
 | Method | What it does |

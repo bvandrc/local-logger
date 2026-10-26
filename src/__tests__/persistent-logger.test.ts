@@ -3,7 +3,8 @@ import { type LogEntry, PersistentLogger } from '../persistent-logger'
 const STORAGE_KEY = 'test-log'
 
 /** A logger as a page load gets one, persisting under `STORAGE_KEY`. */
-const createLogger = () => new PersistentLogger({ storageKey: STORAGE_KEY })
+const createLogger = (options?: { maxStoredLength?: number }) =>
+  new PersistentLogger({ storageKey: STORAGE_KEY, ...options })
 
 const localLog = createLogger()
 
@@ -216,6 +217,80 @@ describe('PersistentLogger persistence', () => {
   it('starts over from a stored value it cannot read', () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ not: 'a list' }))
     expect(reload().getEntries()).toEqual([])
+  })
+
+  it('stores only the newest entries that fit in maxStoredLength', () => {
+    const MAX_STORED_LENGTH = 1000
+    const logger = reload({ maxStoredLength: MAX_STORED_LENGTH })
+    for (let index = 0; index < 50; index++) {
+      logger.info('cart', `fit:${index}`)
+    }
+    leavePage()
+    const stored = localStorage.getItem(STORAGE_KEY) ?? ''
+    expect(stored.length).toBeLessThanOrEqual(MAX_STORED_LENGTH)
+    const actions = reload()
+      .getEntries()
+      .map(({ action }) => action)
+    // The newest, not the oldest.
+    expect(actions.at(-1)).toBe('fit:49')
+    expect(actions).not.toContain('fit:0')
+  })
+
+  it('stores an entry too long to fit on its own without its detail', () => {
+    const logger = reload({ maxStoredLength: 1000 })
+    logger.info('cart', 'small:before')
+    logger.info('cart', 'huge', 'x'.repeat(2000))
+    leavePage()
+    const entries = reload().getEntries()
+    expect(entries.at(-1)).toEqual({
+      timestamp: expect.any(String),
+      scope: 'cart',
+      action: 'huge',
+      detail: '[Omitted: too long to store]',
+    })
+    // Not pushed out by the entry that was too long.
+    expect(entries.map(({ action }) => action)).toContain('small:before')
+  })
+
+  it("drops an older entry's detail before a newer one's of about its size", () => {
+    const logger = reload({ maxStoredLength: 1000 })
+    const NEWER_DETAIL = 'x'.repeat(300)
+    // A little smaller, so only its age puts it first.
+    logger.info('cart', 'older', 'x'.repeat(280))
+    logger.info('cart', 'newer', NEWER_DETAIL)
+    logger.info('cart', 'newest', NEWER_DETAIL)
+    leavePage()
+    expect(reload().getEntries()).toMatchObject([
+      { action: 'older', detail: '[Omitted: too long to store]' },
+      { action: 'newer', detail: NEWER_DETAIL },
+      { action: 'newest', detail: NEWER_DETAIL },
+    ])
+  })
+
+  it("drops a much larger newer entry's detail before an older one's", () => {
+    const logger = reload({ maxStoredLength: 1000 })
+    const OLDER_DETAIL = 'x'.repeat(150)
+    logger.info('cart', 'older', OLDER_DETAIL)
+    logger.info('cart', 'newer', 'x'.repeat(800))
+    leavePage()
+    expect(reload().getEntries()).toMatchObject([
+      { action: 'older', detail: OLDER_DETAIL },
+      { action: 'newer', detail: '[Omitted: too long to store]' },
+    ])
+  })
+
+  it('drops the oldest entries rather than details too small to help', () => {
+    const logger = reload({ maxStoredLength: 1000 })
+    const DETAIL = 'x'.repeat(50)
+    for (let index = 0; index < 20; index++) {
+      logger.info('cart', `small:${index}`, DETAIL)
+    }
+    leavePage()
+    const entries = reload().getEntries()
+    expect(entries.map(({ action }) => action)).not.toContain('small:0')
+    for (const { action, detail } of entries) {
+      expect(detail, action).toBe(DETAIL)
+    }
   })
 
   it('logs to memory where there is no document, as on a server', () => {

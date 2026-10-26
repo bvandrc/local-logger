@@ -58,7 +58,7 @@ export const { logger: log, useLogDuration, useLogOnChange, useLogOnce } =
   createLocalLogger<Scope>({ storageKey: 'my-app-log' })
 ```
 
-`createLoggerHooks(logger)` gives the same hooks for a `LocalLogger` you already have.
+`getLoggerHooks(logger)` gives the same hooks for a `LocalLogger` you already have.
 
 | Hook | What it does |
 | --- | --- |

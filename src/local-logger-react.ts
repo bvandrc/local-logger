@@ -8,7 +8,7 @@ import { useEffect, useRef } from 'react'
 import { LocalLogger, type LocalLoggerOptions } from './local-logger'
 
 /** React hooks that log to `logger`. */
-export const createLoggerHooks = <Scope extends string>(
+export const getLoggerHooks = <Scope extends string>(
   logger: LocalLogger<Scope>
 ) => ({
   /**
@@ -70,5 +70,5 @@ export const createLocalLogger = <Scope extends string = string>(
   options: LocalLoggerOptions
 ) => {
   const logger = new LocalLogger<Scope>(options)
-  return { logger, ...createLoggerHooks(logger) }
+  return { logger, ...getLoggerHooks(logger) }
 }

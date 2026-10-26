@@ -1,7 +1,7 @@
 import { renderHook } from '@testing-library/react'
 
 import { LocalLogger } from '../local-logger'
-import { createLocalLogger, createLoggerHooks } from '../local-logger-react'
+import { createLocalLogger, getLoggerHooks } from '../local-logger-react'
 
 /** The log every hook case writes to, kept apart from the core suite's. */
 const {
@@ -130,10 +130,10 @@ describe('useLogOnce', () => {
   })
 })
 
-describe('createLoggerHooks', () => {
+describe('getLoggerHooks', () => {
   it('logs to the logger it was given', () => {
     const logger = new LocalLogger({ storageKey: 'test-local-log-given' })
-    const { useLogOnce: useLogOnceToGiven } = createLoggerHooks(logger)
+    const { useLogOnce: useLogOnceToGiven } = getLoggerHooks(logger)
     renderHook(() => useLogOnceToGiven('cart', 'given:once', true))
     expect(logger.getEntries()).toEqual([
       expect.objectContaining({ scope: 'cart', action: 'given:once' }),

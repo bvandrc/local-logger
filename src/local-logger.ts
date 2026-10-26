@@ -7,7 +7,7 @@
 
 // A dev dependency, inlined by the build -- see `tsdown.config.ts`.
 import { onAppLeave } from '@bvandrc/react-ui-hooks'
-import { isError, sortBy } from 'es-toolkit'
+import { isError, sortBy, takeRightWhile } from 'es-toolkit'
 import { serializeError } from 'serialize-error'
 
 import { toLoggable } from './utils'
@@ -52,20 +52,19 @@ export interface LocalLoggerOptions {
 const serializeNewest = (entries: LogEntry[], maxLength: number) => {
   // Each entry is serialized once, and the array is joined by hand rather than
   // serialized again, so the length counted is the length written.
-  // The array's brackets.
-  let length = 2
-  const kept: string[] = []
-  for (let index = entries.length - 1; index >= 0; index--) {
-    const serialized = JSON.stringify(entries[index])
-    // One for the comma before every entry but the first.
-    const added = serialized.length + (kept.length > 0 ? 1 : 0)
-    // Too long on its own: skipped, so it can't push out everything older.
-    if (serialized.length + 2 > maxLength) continue
-    if (length + added > maxLength) break
-    length += added
-    kept.push(serialized)
-  }
-  return `[${kept.reverse().join(',')}]`
+  const fitting = entries
+    .map((entry) => JSON.stringify(entry))
+    // Too long on its own, with the brackets: skipped, so it can't push out
+    // everything older.
+    .filter((serialized) => serialized.length + 2 <= maxLength)
+  // The opening bracket, then each entry with the comma or closing bracket
+  // after it.
+  let length = 1
+  const kept = takeRightWhile(fitting, (serialized) => {
+    length += serialized.length + 1
+    return length <= maxLength
+  })
+  return `[${kept.join(',')}]`
 }
 
 /** Throws a `RangeError` unless the option `name` is a positive integer. */

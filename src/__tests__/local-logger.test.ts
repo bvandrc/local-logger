@@ -13,14 +13,20 @@ const getLastEntry = () => localLog.getEntries().at(-1)
 const leavePage = () => window.dispatchEvent(new Event('pagehide'))
 
 describe('LocalLogger.error', () => {
-  it('logs an Error as its message and stack, beside extra', () => {
+  it('logs an Error spelled out, beside extra', () => {
     const ERROR = new Error('boom')
     localLog.error('api', 'items.list:failed', ERROR, { status: 500 })
-    expect(getLastEntry()).toMatchObject({
+    expect(getLastEntry()).toEqual({
+      timestamp: expect.any(String),
       level: 'error',
       scope: 'api',
       action: 'items.list:failed',
-      detail: { message: 'boom', stack: ERROR.stack, status: 500 },
+      detail: {
+        name: 'Error',
+        message: 'boom',
+        stack: ERROR.stack,
+        status: 500,
+      },
     })
   })
 
@@ -30,9 +36,10 @@ describe('LocalLogger.error', () => {
       code: 'E_FETCH',
     })
     localLog.error('api', 'items.list:failed', ERROR)
-    expect(getLastEntry()?.detail).toMatchObject({
+    expect(getLastEntry()?.detail).toEqual({
       name: 'TypeError',
       message: 'outer',
+      stack: ERROR.stack,
       code: 'E_FETCH',
       // Spelled out the same way, rather than as the `{}` JSON makes of it.
       cause: { name: 'RangeError', message: 'inner', stack: CAUSE.stack },

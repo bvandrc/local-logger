@@ -164,7 +164,25 @@ export class LocalLogger<Scope extends string = string> {
     } catch {
       // Unparseable, or storage blocked: start over too.
     }
-    return [...stored, ...this.unsavedEntries].slice(-this.maxEntries)
+    return (
+      [...stored, ...this.unsavedEntries]
+        // Tabs append in the order they write, not the order they logged in.
+        // ISO timestamps sort as strings, and the sort is stable for ties.
+        .sort((a, b) =>
+          a.timestamp < b.timestamp ? -1 : a.timestamp > b.timestamp ? 1 : 0
+        )
+        .slice(-this.maxEntries)
+    )
+  }
+
+  /** Empties the log, both what's stored and what this page hasn't saved yet. */
+  clear() {
+    this.unsavedEntries = []
+    try {
+      localStorage.removeItem(this.storageKey)
+    } catch {
+      // Storage blocked: there was nothing stored to clear.
+    }
   }
 
   private persist() {

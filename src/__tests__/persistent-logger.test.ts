@@ -1,6 +1,6 @@
 import { type LogEntry, PersistentLogger } from '../persistent-logger'
 
-const STORAGE_KEY = 'test-persistent-log'
+const STORAGE_KEY = 'test-log'
 
 /** A logger as a page load gets one, persisting under `STORAGE_KEY`. */
 const createLogger = () => new PersistentLogger({ storageKey: STORAGE_KEY })

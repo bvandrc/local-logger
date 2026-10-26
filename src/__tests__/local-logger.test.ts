@@ -13,9 +13,8 @@ const getLastEntry = () => localLog.getEntries().at(-1)
 const leavePage = () => window.dispatchEvent(new Event('pagehide'))
 
 describe('LocalLogger', () => {
-  it('throws when maxEntries is not above 0', () => {
-    // NaN compares false against 0 either way, so it needs catching too.
-    for (const MAX_ENTRIES of [0, -1, Number.NaN]) {
+  it('throws when maxEntries is not a positive integer', () => {
+    for (const MAX_ENTRIES of [0, -1, 2.5, Number.NaN]) {
       expect(
         () =>
           new LocalLogger({ storageKey: STORAGE_KEY, maxEntries: MAX_ENTRIES }),

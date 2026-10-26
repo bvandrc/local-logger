@@ -27,7 +27,7 @@ export interface LocalLoggerOptions {
   /**
    * How many entries to keep, newest first.
    *
-   * Must be above 0: the constructor throws a `RangeError` otherwise.
+   * Must be a positive integer: the constructor throws a `RangeError` otherwise.
    *
    * @default 300
    */
@@ -88,9 +88,10 @@ export class LocalLogger<Scope extends string = string> {
   private unsavedEntries: LogEntry[] = []
 
   constructor({ storageKey, maxEntries = 300 }: LocalLoggerOptions) {
-    // Negated, so `NaN`, which compares false either way, throws too.
-    if (!(maxEntries > 0)) {
-      throw new RangeError(`maxEntries must be above 0, got ${maxEntries}`)
+    if (!Number.isInteger(maxEntries) || maxEntries < 1) {
+      throw new RangeError(
+        `maxEntries must be a positive integer, got ${maxEntries}`
+      )
     }
     this.storageKey = storageKey
     this.maxEntries = maxEntries

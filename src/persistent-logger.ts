@@ -38,6 +38,8 @@ export interface PersistentLoggerOptions {
   /**
    * Whether to echo each entry to the matching `console` method as it's logged.
    *
+   * Also warns there when the log can't be saved to storage, e.g. when it's full.
+   *
    * @default false
    */
   logToConsole?: boolean
@@ -218,8 +220,15 @@ export class PersistentLogger<Scope extends string = string> {
       // Written now, so the next write must not append them again. Only on
       // success: a failed write keeps them for the next try.
       this.unsavedEntries = []
-    } catch {
-      // Storage full or blocked: the log must never be what breaks the app.
+    } catch (error) {
+      // Storage full or blocked: the log must never be what breaks the app, so
+      // this is a warning, and only where the console was asked for.
+      if (this.logToConsole) {
+        console.warn(
+          `[persistent-logger] couldn't save the log under "${this.storageKey}"`,
+          error
+        )
+      }
     }
   }
 }

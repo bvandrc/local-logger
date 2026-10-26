@@ -128,7 +128,6 @@ export class PersistentLogger<Scope extends string = string> {
     ...details: unknown[]
   ) {
     if (!this.logToConsole) return
-    // A detail not given is left out, rather than printed as `undefined`.
     console[level](`[${scope}] ${action}`, ...details.filter(isNotNil))
   }
 

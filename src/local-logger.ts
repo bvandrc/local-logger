@@ -67,11 +67,11 @@ export class LocalLogger<Scope extends string = string> {
     error: unknown,
     extra?: Record<string, unknown>
   ) {
-    this.push('error', scope, action, {
-      message: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
-      ...extra,
-    })
+    const thrown =
+      error instanceof Error
+        ? { message: error.message, stack: error.stack }
+        : { message: String(error) }
+    this.push('error', scope, action, { ...thrown, ...extra })
   }
 
   /** A `.catch` handler that logs the rejection via `error` and swallows it. */

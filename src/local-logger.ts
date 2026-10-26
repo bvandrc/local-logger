@@ -75,9 +75,12 @@ const serializeNewest = (entries: LogEntry[], maxLength: number) => {
 }
 
 export class LocalLogger<Scope extends string = string> {
-  private readonly storageKey: string
-  private readonly maxEntries: number
-  private readonly maxStoredLength: number
+  /** The localStorage key the log persists under. */
+  readonly storageKey: string
+  /** How many entries the log keeps, with the default filled in. */
+  readonly maxEntries: number
+  /** How long the stored log may grow, with the default filled in. */
+  readonly maxStoredLength: number
   /**
    * Logged since this page last wrote to storage. Storage itself is read only
    * when a report or a write needs it, so app load parses nothing.

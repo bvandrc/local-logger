@@ -24,6 +24,11 @@ describe('LocalLogger.error', () => {
       detail: { message: 'boom', stack: ERROR.stack, status: 500 },
     })
   })
+
+  it('logs a thrown non-Error as its string, with no stack', () => {
+    localLog.error('api', 'items.list:rejected', 'offline')
+    expect(getLastEntry()?.detail).toEqual({ message: 'offline' })
+  })
 })
 
 describe('LocalLogger.catchTo', () => {

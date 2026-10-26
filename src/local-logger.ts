@@ -8,8 +8,9 @@
 // A dev dependency, inlined by the build -- see `tsdown.config.ts`.
 import { onAppLeave } from '@bvandrc/react-ui-hooks'
 import { isError, sortBy } from 'es-toolkit'
+import { serializeError } from 'serialize-error'
 
-import { errorFields, toLoggable } from './utils'
+import { toLoggable } from './utils'
 
 /** `info` is the default, and the one level an entry leaves unsaid. */
 export type LogLevel = 'info' | 'warn' | 'error'
@@ -84,9 +85,7 @@ export class LocalLogger<Scope extends string = string> {
     extra?: Record<string, unknown>
   ) {
     this.push('error', scope, action, {
-      ...(isError(error)
-        ? { ...error, ...errorFields(error) }
-        : { message: String(error) }),
+      ...(isError(error) ? serializeError(error) : { message: String(error) }),
       ...extra,
     })
   }

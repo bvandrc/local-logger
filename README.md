@@ -6,7 +6,7 @@ A persistent on-device log for browser diagnostics reports. It's kept in `localS
 npm install local-logger
 ```
 
-ESM only, with types included. Its one dependency is [es-toolkit](https://es-toolkit.dev); React 18 or 19 is an optional peer, needed only for `local-logger/react`.
+ESM only, with types included. Its dependencies are [es-toolkit](https://es-toolkit.dev) and [serialize-error](https://github.com/sindresorhus/serialize-error); React 18 or 19 is an optional peer, needed only for `local-logger/react`.
 
 ## Usage
 
@@ -52,7 +52,7 @@ Saving runs on `visibilitychange` to hidden as well as `pagehide`, since a phone
 
 ### `toLoggable(value)`
 
-A copy of `value` as JSON will save it, which the logger runs every `detail` through. An `Error` at any depth is spelled out with its `name`, `message`, `stack`, `cause`, `errors`, and own fields such as `code`, where JSON alone makes it `{}`. A loop is cut to `'[Circular]'`, and anything with a `toJSON`, like a `Date`, saves as that gives it. Useful for a report built outside the logger:
+A copy of `value` as JSON will save it, which the logger runs every `detail` through, built on `serialize-error`. An `Error` at any depth is spelled out with its `name`, `message`, `stack`, `cause`, `errors`, and own fields such as `code`, where JSON alone makes it `{}`. A loop is cut to `'[Circular]'`, and anything with a `toJSON`, like a `Date`, saves as that gives it. Useful for a report built outside the logger:
 
 ```ts
 import { toLoggable } from 'local-logger'

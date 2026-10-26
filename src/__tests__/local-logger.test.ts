@@ -121,4 +121,13 @@ describe('LocalLogger persistence', () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ not: 'a list' }))
     expect(reload().getEntries()).toEqual([])
   })
+
+  it('logs to memory where there is no document, as on a server', () => {
+    vi.stubGlobal('document', undefined)
+    const logger = reload()
+    logger.info('app', 'server:render')
+    expect(logger.getEntries().at(-1)).toMatchObject({
+      action: 'server:render',
+    })
+  })
 })

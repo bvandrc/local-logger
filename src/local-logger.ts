@@ -74,9 +74,11 @@ export class LocalLogger<Scope extends string = string> {
   }
 
   /**
-   * Logs a failure, with the thrown value spelled out beside `extra`: an
-   * `Error`'s `name`, `message`, `stack`, `cause`, and own fields, or anything
-   * else thrown as it is, under `thrown`.
+   * Logs a caught error, along with any `extra` details.
+   *
+   * An `Error` is saved as its `name`, `message`, `stack`, and `cause`, plus any
+   * fields of its own, like `code`. Anything else that was thrown is saved as
+   * it is, under `thrown`.
    */
   error(
     scope: Scope,

@@ -40,7 +40,7 @@ Logging only appends to memory. The log is written to storage when the page is h
 | --- | --- |
 | `info(scope, action, detail?)` | Logs an entry. |
 | `warn(scope, action, detail?)` | Logs an entry at `warn`. |
-| `error(scope, action, error, extra?)` | Logs a failure at `error`, with the thrown value spelled out beside `extra`: an `Error`'s `name`, `message`, `stack`, `cause`, and own fields such as `code`, or anything else thrown as it is, under `thrown`. |
+| `error(scope, action, error, extra?)` | Logs a caught error at `error`, along with any `extra` details. An `Error` is saved as its `name`, `message`, `stack`, and `cause`, plus any fields of its own, like `code`. Anything else that was thrown is saved as it is, under `thrown`. |
 | `catchTo(scope, action)` | A `.catch` handler that logs the rejection via `error` and swallows it. |
 | `withScope(scope)` | The same four methods with `scope` already filled in, for a module that logs under one scope throughout. |
 | `getEntries()` | Every entry still kept, across sessions and tabs, oldest first. |

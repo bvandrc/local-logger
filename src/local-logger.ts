@@ -41,19 +41,6 @@ export interface LocalLoggerOptions {
   maxStoredLength?: number
 }
 
-const DEFAULT_MAX_ENTRIES = 300
-const DEFAULT_MAX_STORED_LENGTH = 500_000
-
-const readStoredEntries = (storageKey: string): LogEntry[] => {
-  try {
-    const stored: unknown = JSON.parse(localStorage.getItem(storageKey) ?? '[]')
-    // Anything else is a write this version can't read; start over.
-    return Array.isArray(stored) ? stored : []
-  } catch {
-    return []
-  }
-}
-
 /** The newest of `entries`, as one JSON array no longer than `maxLength`. */
 const serializeNewest = (entries: LogEntry[], maxLength: number) => {
   // Each entry is serialized once, and the array is joined by hand rather than
@@ -90,8 +77,8 @@ export class LocalLogger<Scope extends string = string> {
   /** Safe to call during server rendering, where it logs to memory only. */
   constructor({
     storageKey,
-    maxEntries = DEFAULT_MAX_ENTRIES,
-    maxStoredLength = DEFAULT_MAX_STORED_LENGTH,
+    maxEntries = 300,
+    maxStoredLength = 500_000,
   }: LocalLoggerOptions) {
     this.storageKey = storageKey
     this.maxEntries = maxEntries
@@ -168,8 +155,18 @@ export class LocalLogger<Scope extends string = string> {
   /** Every entry still kept, across sessions and tabs, oldest first. */
   getEntries(): LogEntry[] {
     // Read fresh each time, so what another tab has written since is included.
+    let stored: LogEntry[] = []
+    try {
+      const parsed: unknown = JSON.parse(
+        localStorage.getItem(this.storageKey) ?? '[]'
+      )
+      // Anything else is a write this version can't read; start over.
+      if (Array.isArray(parsed)) stored = parsed
+    } catch {
+      // Unparseable, or storage blocked: start over too.
+    }
     return (
-      [...readStoredEntries(this.storageKey), ...this.unsavedEntries]
+      [...stored, ...this.unsavedEntries]
         // Tabs append in the order they write, not the order they logged in.
         // ISO timestamps sort as strings, and the sort is stable for ties.
         .sort((a, b) =>

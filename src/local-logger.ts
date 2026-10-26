@@ -29,6 +29,36 @@ export interface LocalLoggerOptions {
    * @default 300
    */
   maxEntries?: number
+  /**
+   * How long the stored log may grow, in characters of its JSON.
+   *
+   * The oldest entries go first, and an entry too long to fit on its own is
+   * never stored. The default is a tenth of what browsers commonly give an
+   * origin's localStorage.
+   *
+   * @default 500_000
+   */
+  maxStoredLength?: number
+}
+
+/** The newest of `entries`, as one JSON array no longer than `maxLength`. */
+const serializeNewest = (entries: LogEntry[], maxLength: number) => {
+  // Each entry is serialized once, and the array is joined by hand rather than
+  // serialized again, so the length counted is the length written.
+  // The array's brackets.
+  let length = 2
+  const kept: string[] = []
+  for (let index = entries.length - 1; index >= 0; index--) {
+    const serialized = JSON.stringify(entries[index])
+    // One for the comma before every entry but the first.
+    const added = serialized.length + (kept.length > 0 ? 1 : 0)
+    // Too long on its own: skipped, so it can't push out everything older.
+    if (serialized.length + 2 > maxLength) continue
+    if (length + added > maxLength) break
+    length += added
+    kept.push(serialized)
+  }
+  return `[${kept.reverse().join(',')}]`
 }
 
 export class LocalLogger<Scope extends string = string> {
@@ -36,15 +66,22 @@ export class LocalLogger<Scope extends string = string> {
   readonly storageKey: string
   /** How many entries the log keeps, with the default filled in. */
   readonly maxEntries: number
+  /** How long the stored log may grow, with the default filled in. */
+  readonly maxStoredLength: number
   /**
    * Logged since this page last wrote to storage. Storage itself is read only
    * when a report or a write needs it, so app load parses nothing.
    */
   private unsavedEntries: LogEntry[] = []
 
-  constructor({ storageKey, maxEntries = 300 }: LocalLoggerOptions) {
+  constructor({
+    storageKey,
+    maxEntries = 300,
+    maxStoredLength = 500_000,
+  }: LocalLoggerOptions) {
     this.storageKey = storageKey
     this.maxEntries = maxEntries
+    this.maxStoredLength = maxStoredLength
     // Never unsubscribed: the logger lives as long as the page does.
     onAppLeave(() => this.persist())
   }
@@ -130,7 +167,10 @@ export class LocalLogger<Scope extends string = string> {
 
   private persist() {
     try {
-      localStorage.setItem(this.storageKey, JSON.stringify(this.getEntries()))
+      localStorage.setItem(
+        this.storageKey,
+        serializeNewest(this.getEntries(), this.maxStoredLength)
+      )
       // Written now, so the next write must not append them again. Only on
       // success: a failed write keeps them for the next try.
       this.unsavedEntries = []

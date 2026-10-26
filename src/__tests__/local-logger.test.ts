@@ -3,7 +3,8 @@ import { LocalLogger, type LogEntry } from '../local-logger'
 const STORAGE_KEY = 'test-local-log'
 
 /** A logger as a page load gets one, persisting under `STORAGE_KEY`. */
-const createLogger = () => new LocalLogger({ storageKey: STORAGE_KEY })
+const createLogger = (options?: { maxStoredLength?: number }) =>
+  new LocalLogger({ storageKey: STORAGE_KEY, ...options })
 
 const localLog = createLogger()
 
@@ -120,5 +121,35 @@ describe('LocalLogger persistence', () => {
   it('starts over from a stored value it cannot read', () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ not: 'a list' }))
     expect(reload().getEntries()).toEqual([])
+  })
+
+  it('stores only the newest entries that fit in maxStoredLength', () => {
+    const MAX_STORED_LENGTH = 1000
+    const logger = reload({ maxStoredLength: MAX_STORED_LENGTH })
+    for (let index = 0; index < 50; index++) {
+      logger.info('cart', `fit:${index}`)
+    }
+    leavePage()
+    const stored = localStorage.getItem(STORAGE_KEY) ?? ''
+    expect(stored.length).toBeLessThanOrEqual(MAX_STORED_LENGTH)
+    const actions = reload()
+      .getEntries()
+      .map(({ action }) => action)
+    // The newest, not the oldest.
+    expect(actions.at(-1)).toBe('fit:49')
+    expect(actions).not.toContain('fit:0')
+  })
+
+  it('never stores an entry too long to fit on its own', () => {
+    const logger = reload({ maxStoredLength: 1000 })
+    logger.info('cart', 'small:before')
+    logger.info('cart', 'huge', 'x'.repeat(2000))
+    leavePage()
+    const actions = reload()
+      .getEntries()
+      .map(({ action }) => action)
+    expect(actions).not.toContain('huge')
+    // Not pushed out by the entry that was skipped.
+    expect(actions).toContain('small:before')
   })
 })

@@ -81,12 +81,12 @@ export class PersistentLogger<Scope extends string = string> {
   }
 
   info(scope: Scope, action: string, detail?: unknown) {
-    this.echo('info', scope, action, [detail])
+    this.echo('info', scope, action, detail)
     this.push('info', scope, action, detail)
   }
 
   warn(scope: Scope, action: string, detail?: unknown) {
-    this.echo('warn', scope, action, [detail])
+    this.echo('warn', scope, action, detail)
     this.push('warn', scope, action, detail)
   }
 
@@ -105,7 +105,7 @@ export class PersistentLogger<Scope extends string = string> {
     extra?: Record<string, unknown>
   ) {
     // The thrown value itself, so the console can show it live, stack and all.
-    this.echo('error', scope, action, [error, extra])
+    this.echo('error', scope, action, error, extra)
     this.push('error', scope, action, {
       // Serialized here, not left to `push`'s `toLoggable`: an `Error`'s
       // `name`, `message`, and `stack` aren't enumerable, so spreading the
@@ -125,7 +125,7 @@ export class PersistentLogger<Scope extends string = string> {
     level: LogLevel,
     scope: Scope,
     action: string,
-    details: unknown[]
+    ...details: unknown[]
   ) {
     if (!this.logToConsole) return
     // A detail not given is left out, rather than printed as `undefined`.

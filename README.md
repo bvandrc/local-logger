@@ -35,7 +35,7 @@ Logging only appends to memory. The log is written to storage when the page is h
 | --- | --- | --- |
 | `storageKey` | (required) | The `localStorage` key the log persists under. Must not be empty. |
 | `maxEntries` | `300` | How many entries to keep; the oldest go first. Must be a positive integer. |
-| `logToConsole` | `false` | Whether to echo each entry to `console.info`, `console.warn`, or `console.error` as it's logged, for development. An `error` echoes the thrown value itself, so the console shows it live. |
+| `logToConsole` | `false` | Whether to echo each entry to `console.info`, `console.warn`, or `console.error` as it's logged. |
 
 | Method | What it does |
 | --- | --- |

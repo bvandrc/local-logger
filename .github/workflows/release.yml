@@ -8,8 +8,8 @@ on:
 
 permissions:
   contents: read
-  # Signs the npm provenance statement, and authenticates the publish once npm
-  # trusted publishing is configured for the package.
+  # Signs the npm provenance statement, and authenticates the publish through
+  # npm trusted publishing.
   id-token: write
 
 jobs:
@@ -30,6 +30,3 @@ jobs:
       # `prepublishOnly` runs the checks, the tests, and the build. A release
       # checks out its tag rather than a branch, which pnpm's git checks reject.
       - run: pnpm publish --no-git-checks --provenance
-        env:
-          # Only needed until trusted publishing is set up on npmjs.com.
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

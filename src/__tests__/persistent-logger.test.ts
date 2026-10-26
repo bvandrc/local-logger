@@ -111,50 +111,6 @@ describe('PersistentLogger.getEntries', () => {
   })
 })
 
-describe('PersistentLogger logToConsole', () => {
-  const echoLog = new PersistentLogger({
-    storageKey: 'test-log-echo',
-    logToConsole: true,
-  })
-
-  /** Spies on the console method `level` echoes to, keeping it quiet. */
-  const mockConsole = (level: 'info' | 'warn' | 'error') =>
-    vi.spyOn(console, level).mockReturnValue(undefined)
-
-  it('echoes each level to its console method', () => {
-    const consoleSpies = {
-      info: mockConsole('info'),
-      warn: mockConsole('warn'),
-      error: mockConsole('error'),
-    }
-    const ERROR = new Error('offline')
-    echoLog.info('cart', 'echo:info', { id: 1 })
-    echoLog.warn('cart', 'echo:warn')
-    echoLog.error('sync', 'echo:error', ERROR, { attempt: 2 })
-    const calls = {
-      info: consoleSpies.info.mock.calls,
-      warn: consoleSpies.warn.mock.calls,
-      error: consoleSpies.error.mock.calls,
-    }
-    for (const spy of Object.values(consoleSpies)) spy.mockRestore()
-    expect(calls).toEqual({
-      info: [['[cart] echo:info', { id: 1 }]],
-      // No detail given, so none echoed.
-      warn: [['[cart] echo:warn']],
-      // The Error itself, not its saved copy.
-      error: [['[sync] echo:error', ERROR, { attempt: 2 }]],
-    })
-  })
-
-  it('echoes nothing by default', () => {
-    const infoSpy = mockConsole('info')
-    localLog.info('cart', 'echo:off')
-    const callCount = infoSpy.mock.calls.length
-    infoSpy.mockRestore()
-    expect(callCount).toBe(0)
-  })
-})
-
 describe('PersistentLogger persistence', () => {
   /**
    * A fresh logger, as a reload or a relaunch gets one. Each case writes

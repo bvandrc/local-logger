@@ -31,18 +31,6 @@ export interface LocalLoggerOptions {
   maxEntries?: number
 }
 
-const DEFAULT_MAX_ENTRIES = 300
-
-const readStoredEntries = (storageKey: string): LogEntry[] => {
-  try {
-    const stored: unknown = JSON.parse(localStorage.getItem(storageKey) ?? '[]')
-    // Anything else is a write this version can't read; start over.
-    return Array.isArray(stored) ? stored : []
-  } catch {
-    return []
-  }
-}
-
 export class LocalLogger<Scope extends string = string> {
   /** The localStorage key the log persists under. */
   readonly storageKey: string
@@ -54,10 +42,7 @@ export class LocalLogger<Scope extends string = string> {
    */
   private unsavedEntries: LogEntry[] = []
 
-  constructor({
-    storageKey,
-    maxEntries = DEFAULT_MAX_ENTRIES,
-  }: LocalLoggerOptions) {
+  constructor({ storageKey, maxEntries = 300 }: LocalLoggerOptions) {
     this.storageKey = storageKey
     this.maxEntries = maxEntries
     // Never unsubscribed: the logger lives as long as the page does.
@@ -130,10 +115,17 @@ export class LocalLogger<Scope extends string = string> {
   /** Every entry still kept, across sessions and tabs, oldest first. */
   getEntries(): LogEntry[] {
     // Read fresh each time, so what another tab has written since is included.
-    return [
-      ...readStoredEntries(this.storageKey),
-      ...this.unsavedEntries,
-    ].slice(-this.maxEntries)
+    let stored: LogEntry[] = []
+    try {
+      const parsed: unknown = JSON.parse(
+        localStorage.getItem(this.storageKey) ?? '[]'
+      )
+      // Anything else is a write this version can't read; start over.
+      if (Array.isArray(parsed)) stored = parsed
+    } catch {
+      // Unparseable, or storage blocked: start over too.
+    }
+    return [...stored, ...this.unsavedEntries].slice(-this.maxEntries)
   }
 
   private persist() {

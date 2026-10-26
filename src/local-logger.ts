@@ -22,7 +22,7 @@ export interface LogEntry {
 }
 
 export interface LocalLoggerOptions {
-  /** The localStorage key the log persists under. */
+  /** The localStorage key the log persists under. Must not be empty. */
   storageKey: string
   /**
    * How many entries to keep, newest first.
@@ -46,6 +46,9 @@ export class LocalLogger<Scope extends string = string> {
   private unsavedEntries: LogEntry[] = []
 
   constructor({ storageKey, maxEntries = 300 }: LocalLoggerOptions) {
+    if (storageKey.length === 0) {
+      throw new RangeError('storageKey must not be empty')
+    }
     if (!Number.isInteger(maxEntries) || maxEntries < 1) {
       throw new RangeError(
         `maxEntries must be a positive integer, got ${maxEntries}`

@@ -36,6 +36,8 @@ Logging only appends to memory. The log is written to storage when the page is h
 | `storageKey` | (required) | The `localStorage` key the log persists under. |
 | `maxEntries` | `300` | How many entries to keep; the oldest go first. |
 
+Safe to construct during server rendering, where it logs to memory only.
+
 | Method | What it does |
 | --- | --- |
 | `info(scope, action, detail?)` | Logs an entry. |

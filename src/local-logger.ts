@@ -42,9 +42,12 @@ export class LocalLogger<Scope extends string = string> {
    */
   private unsavedEntries: LogEntry[] = []
 
+  /** Safe to call during server rendering, where it logs to memory only. */
   constructor({ storageKey, maxEntries = 300 }: LocalLoggerOptions) {
     this.storageKey = storageKey
     this.maxEntries = maxEntries
+    // No page to leave while rendering on a server, and nothing to persist to.
+    if (typeof document === 'undefined') return
     // Never unsubscribed: the logger lives as long as the page does.
     onAppLeave(() => this.persist())
   }

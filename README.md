@@ -11,11 +11,11 @@ ESM only, with types included. React 18 or 19 is an optional peer, needed only f
 ## Usage
 
 ```ts
-import { LocalLogger } from 'persistent-logger'
+import { PersistentLogger } from 'persistent-logger'
 
 type Scope = 'api' | 'auth' | 'sync'
 
-export const log = new LocalLogger<Scope>({ storageKey: 'my-app-log' })
+export const log = new PersistentLogger<Scope>({ storageKey: 'my-app-log' })
 
 log.info('auth', 'signIn', { method: 'google' })
 log.warn('sync', 'retry', { attempt: 3 })
@@ -29,7 +29,7 @@ Logging only appends to memory. The log is written to storage when the page is h
 
 ## API
 
-### `new LocalLogger<Scope>(options)`
+### `new PersistentLogger<Scope>(options)`
 
 | Option | Default | What it does |
 | --- | --- | --- |
@@ -63,13 +63,13 @@ JSON.stringify(toLoggable({ failed: new TypeError('offline') }))
 ## React
 
 ```ts
-import { createLocalLogger } from 'persistent-logger/react'
+import { createPersistentLogger } from 'persistent-logger/react'
 
 export const { logger: log, useLogDuration, useLogOnChange, useLogOnce } =
-  createLocalLogger<Scope>({ storageKey: 'my-app-log' })
+  createPersistentLogger<Scope>({ storageKey: 'my-app-log' })
 ```
 
-`getLoggerHooks(logger)` gives the same hooks for a `LocalLogger` you already have.
+`getLoggerHooks(logger)` gives the same hooks for a `PersistentLogger` you already have.
 
 | Hook | What it does |
 | --- | --- |

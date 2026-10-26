@@ -1,7 +1,10 @@
 import { renderHook } from '@testing-library/react'
 
-import { LocalLogger } from '../persistent-logger'
-import { createLocalLogger, getLoggerHooks } from '../persistent-logger-react'
+import { PersistentLogger } from '../persistent-logger'
+import {
+  createPersistentLogger,
+  getLoggerHooks,
+} from '../persistent-logger-react'
 
 /** The log every hook case writes to, kept apart from the core suite's. */
 const {
@@ -9,7 +12,7 @@ const {
   useLogDuration,
   useLogOnChange,
   useLogOnce,
-} = createLocalLogger({ storageKey: 'test-local-log-hooks' })
+} = createPersistentLogger({ storageKey: 'test-persistent-log-hooks' })
 
 /**
  * What a hook logged under `action` -- one name per case, since the cases
@@ -132,7 +135,9 @@ describe('useLogOnce', () => {
 
 describe('getLoggerHooks', () => {
   it('logs to the logger it was given', () => {
-    const logger = new LocalLogger({ storageKey: 'test-local-log-given' })
+    const logger = new PersistentLogger({
+      storageKey: 'test-persistent-log-given',
+    })
     const { useLogOnce: useLogOnceToGiven } = getLoggerHooks(logger)
     renderHook(() => useLogOnceToGiven('cart', 'given:once', true))
     expect(logger.getEntries()).toEqual([

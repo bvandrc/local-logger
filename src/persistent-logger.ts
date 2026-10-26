@@ -24,7 +24,7 @@ export interface LogEntry {
   detail?: unknown
 }
 
-export interface LocalLoggerOptions {
+export interface PersistentLoggerOptions {
   /** The localStorage key the log persists under. Must not be empty. */
   storageKey: string
   /**
@@ -37,7 +37,7 @@ export interface LocalLoggerOptions {
   maxEntries?: number
 }
 
-export class LocalLogger<Scope extends string = string> {
+export class PersistentLogger<Scope extends string = string> {
   /** The localStorage key the log persists under. */
   readonly storageKey: string
   /** How many entries the log keeps, with the default filled in. */
@@ -48,7 +48,7 @@ export class LocalLogger<Scope extends string = string> {
    */
   private unsavedEntries: LogEntry[] = []
 
-  constructor({ storageKey, maxEntries = 300 }: LocalLoggerOptions) {
+  constructor({ storageKey, maxEntries = 300 }: PersistentLoggerOptions) {
     if (storageKey.length === 0) {
       throw new RangeError('storageKey must not be empty')
     }

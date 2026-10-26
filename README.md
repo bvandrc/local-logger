@@ -6,7 +6,7 @@ A persistent on-device log for browser diagnostics reports. It's kept in `localS
 npm install local-logger
 ```
 
-ESM only, with types included. Its one dependency is [es-toolkit](https://es-toolkit.dev); React 18 or 19 is an optional peer, needed only for `local-logger/react`.
+ESM only, with types included. React 18 or 19 is an optional peer, needed only for `local-logger/react`.
 
 ## Usage
 
@@ -41,15 +41,25 @@ Logging only appends to memory. The log is written to storage when the page is h
 | --- | --- |
 | `info(scope, action, detail?)` | Logs an entry. |
 | `warn(scope, action, detail?)` | Logs an entry at `warn`. |
-| `error(scope, action, error, extra?)` | Logs a failure at `error`, with the thrown value spelled out as `message` and `stack` (an `Error` serializes to `{}` in JSON) beside `extra`. |
+| `error(scope, action, error, extra?)` | Logs a caught error at `error`, along with any `extra` details. An `Error` is saved as its `name`, `message`, `stack`, and `cause`, plus any fields of its own, like `code`. |
 | `catchTo(scope, action)` | A `.catch` handler that logs the rejection via `error` and swallows it. |
 | `withScope(scope)` | The same four methods with `scope` already filled in, for a module that logs under one scope throughout. |
 | `getEntries()` | Every entry still kept, across sessions and tabs, oldest first. |
 | `clear()` | Empties the log, both what's stored and what this page hasn't saved yet. |
 
-Each entry is a `LogEntry`: `{ timestamp, level?, scope, action, detail? }`, where `timestamp` is an ISO string and `level` is left out at `info`, so only the levels worth noticing show.
+Each entry is a `LogEntry`: `{ timestamp, level?, scope, action, detail? }`, where `timestamp` is an ISO string and `level` is left out at `info`, so only the levels worth noticing show. A `detail` is copied as it's logged, with any `Error` in it spelled out the same way (JSON alone makes one `{}`) and any circular reference saved as `'[Circular]'`.
 
 Saving runs on `visibilitychange` to hidden as well as `pagehide`, since a phone can kill a backgrounded app without `pagehide` ever firing. Each save re-reads storage first, so tabs open at once all keep what they logged.
+
+### `toLoggable(value)`
+
+A copy of `value` that saves cleanly as JSON: any `Error` in it is spelled out rather than saved as `{}`, and circular references are cut. The logger runs every `detail` through it, and it's handy for a report built outside the logger:
+
+```ts
+import { toLoggable } from 'local-logger'
+
+JSON.stringify(toLoggable({ failed: new TypeError('offline') }))
+```
 
 ## React
 

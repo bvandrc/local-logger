@@ -2,3 +2,4 @@
 // barrel by definition -- it is what `exports` resolves to.
 
 export * from './local-logger'
+export { toLoggable } from './utils'

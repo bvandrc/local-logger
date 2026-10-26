@@ -175,29 +175,6 @@ describe('LocalLogger persistence', () => {
     })
   })
 
-  it('saves a circular detail with the loop cut', () => {
-    const logger = reload()
-    const DETAIL: Record<string, unknown> = { id: 1 }
-    DETAIL.self = DETAIL
-    logger.info('cart', 'circular', DETAIL)
-    leavePage()
-    expect(reload().getEntries().at(-1)?.detail).toEqual({
-      id: 1,
-      self: '[Circular]',
-    })
-  })
-
-  it('saves an object that appears twice, but not in a loop, both times', () => {
-    const logger = reload()
-    const SHARED = { id: 7 }
-    logger.info('cart', 'shared', { first: SHARED, second: SHARED })
-    leavePage()
-    expect(reload().getEntries().at(-1)?.detail).toEqual({
-      first: { id: 7 },
-      second: { id: 7 },
-    })
-  })
-
   it('starts over from a stored value it cannot read', () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ not: 'a list' }))
     expect(reload().getEntries()).toEqual([])

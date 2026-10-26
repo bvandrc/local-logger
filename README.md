@@ -50,6 +50,16 @@ Each entry is a `LogEntry`: `{ timestamp, level?, scope, action, detail? }`, whe
 
 Saving runs on `visibilitychange` to hidden as well as `pagehide`, since a phone can kill a backgrounded app without `pagehide` ever firing. Each save re-reads storage first, so tabs open at once all keep what they logged.
 
+### `toLoggable(value)`
+
+A copy of `value` as JSON will save it, which the logger runs every `detail` through. An `Error` at any depth is spelled out with its `name`, `message`, `stack`, `cause`, `errors`, and own fields such as `code`, where JSON alone makes it `{}`. A loop is cut to `'[Circular]'`, and anything with a `toJSON`, like a `Date`, saves as that gives it. Useful for a report built outside the logger:
+
+```ts
+import { toLoggable } from 'local-logger'
+
+JSON.stringify(toLoggable({ failed: new TypeError('offline') }))
+```
+
 ## React
 
 ```ts

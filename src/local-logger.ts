@@ -7,7 +7,9 @@
 
 // A dev dependency, inlined by the build -- see `tsdown.config.ts`.
 import { onAppLeave } from '@bvandrc/react-ui-hooks'
-import { isError, mapValues, pick, sortBy } from 'es-toolkit'
+import { isError, sortBy } from 'es-toolkit'
+
+import { errorFields, toLoggable } from './utils'
 
 /** `info` is the default, and the one level an entry leaves unsaid. */
 export type LogLevel = 'info' | 'warn' | 'error'
@@ -32,48 +34,6 @@ export interface LocalLoggerOptions {
    * @default 300
    */
   maxEntries?: number
-}
-
-/**
- * What an `Error` holds that a spread leaves out, being inherited or
- * non-enumerable.
- */
-const errorFields = (
-  error: Error & Partial<Pick<AggregateError, 'errors'>>
-) => ({
-  // Read directly: `name` is inherited everywhere, and `stack` is in Firefox
-  // and Safari, where `pick` (own properties only) would drop it.
-  name: error.name,
-  message: error.message,
-  stack: error.stack,
-  // Own properties when present, and absent rather than undefined otherwise.
-  ...pick(error, ['cause', 'errors']),
-})
-
-/**
- * A copy of `value` as JSON will save it, with any `Error` in it spelled out
- * (one serializes to `{}` otherwise) and circular references cut.
- */
-const toLoggable = (
-  value: unknown,
-  ancestors = new WeakSet<object>()
-): unknown => {
-  if (typeof value !== 'object' || value === null) return value
-  if (ancestors.has(value)) return '[Circular]'
-  // Dates, URLs, and the like say for themselves how they save.
-  if ('toJSON' in value && typeof value.toJSON === 'function') {
-    return value.toJSON()
-  }
-  ancestors.add(value)
-  const copy = Array.isArray(value)
-    ? value.map((item) => toLoggable(item, ancestors))
-    : mapValues(
-        { ...value, ...(isError(value) && errorFields(value)) },
-        (item) => toLoggable(item, ancestors)
-      )
-  // Only an ancestor is circular: the same object twice side by side is not.
-  ancestors.delete(value)
-  return copy
 }
 
 export class LocalLogger<Scope extends string = string> {

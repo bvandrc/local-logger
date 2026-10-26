@@ -44,6 +44,7 @@ Logging only appends to memory. The log is written to storage when the page is h
 | `catchTo(scope, action)` | A `.catch` handler that logs the rejection via `error` and swallows it. |
 | `withScope(scope)` | The same four methods with `scope` already filled in, for a module that logs under one scope throughout. |
 | `getEntries()` | Every entry still kept, across sessions and tabs, oldest first. |
+| `clear()` | Empties the log, both what's stored and what this page hasn't saved yet. |
 
 Each entry is a `LogEntry`: `{ timestamp, level?, scope, action, detail? }`, where `timestamp` is an ISO string and `level` is left out at `info`, so only the levels worth noticing show.
 

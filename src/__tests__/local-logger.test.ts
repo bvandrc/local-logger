@@ -24,6 +24,21 @@ describe('LocalLogger.error', () => {
     })
   })
 
+  it('logs an Error as its name, cause, and own fields too', () => {
+    const CAUSE = new RangeError('inner')
+    const ERROR = Object.assign(new TypeError('outer', { cause: CAUSE }), {
+      code: 'E_FETCH',
+    })
+    localLog.error('api', 'items.list:failed', ERROR)
+    expect(getLastEntry()?.detail).toMatchObject({
+      name: 'TypeError',
+      message: 'outer',
+      code: 'E_FETCH',
+      // Spelled out the same way, rather than as the `{}` JSON makes of it.
+      cause: { name: 'RangeError', message: 'inner', stack: CAUSE.stack },
+    })
+  })
+
   it('logs a thrown non-Error as its string, with no stack', () => {
     localLog.error('api', 'items.list:rejected', 'offline')
     expect(getLastEntry()?.detail).toEqual({ message: 'offline' })
@@ -120,6 +135,39 @@ describe('LocalLogger persistence', () => {
     expect(entries).toHaveLength(300)
     // The newest, not the oldest.
     expect(entries.at(-1)).toMatchObject({ action: 'stored:399' })
+  })
+
+  it('saves an Error inside any detail spelled out', () => {
+    const logger = reload()
+    logger.warn('sync', 'retry', { attempt: 2, last: new Error('timeout') })
+    leavePage()
+    expect(reload().getEntries().at(-1)?.detail).toMatchObject({
+      attempt: 2,
+      last: { name: 'Error', message: 'timeout' },
+    })
+  })
+
+  it('saves a circular detail with the loop cut', () => {
+    const logger = reload()
+    const DETAIL: Record<string, unknown> = { id: 1 }
+    DETAIL.self = DETAIL
+    logger.info('cart', 'circular', DETAIL)
+    leavePage()
+    expect(reload().getEntries().at(-1)?.detail).toEqual({
+      id: 1,
+      self: '[Circular]',
+    })
+  })
+
+  it('saves an object that appears twice, but not in a loop, both times', () => {
+    const logger = reload()
+    const SHARED = { id: 7 }
+    logger.info('cart', 'shared', { first: SHARED, second: SHARED })
+    leavePage()
+    expect(reload().getEntries().at(-1)?.detail).toEqual({
+      first: { id: 7 },
+      second: { id: 7 },
+    })
   })
 
   it('starts over from a stored value it cannot read', () => {

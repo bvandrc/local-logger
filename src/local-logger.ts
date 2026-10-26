@@ -31,6 +31,46 @@ export interface LocalLoggerOptions {
   maxEntries?: number
 }
 
+/**
+ * What an `Error` holds that a spread leaves out, being inherited or
+ * non-enumerable.
+ */
+const errorFields = (error: Error) => ({
+  name: error.name,
+  message: error.message,
+  stack: error.stack,
+  ...('cause' in error && { cause: error.cause }),
+  ...('errors' in error && { errors: error.errors }),
+})
+
+/**
+ * A copy of `value` as JSON will save it, with any `Error` in it spelled out
+ * (one serializes to `{}` otherwise) and circular references cut.
+ */
+const toLoggable = (
+  value: unknown,
+  ancestors = new WeakSet<object>()
+): unknown => {
+  if (typeof value !== 'object' || value === null) return value
+  if (ancestors.has(value)) return '[Circular]'
+  // Dates, URLs, and the like say for themselves how they save.
+  if ('toJSON' in value && typeof value.toJSON === 'function') {
+    return value.toJSON()
+  }
+  ancestors.add(value)
+  const copy = Array.isArray(value)
+    ? value.map((item) => toLoggable(item, ancestors))
+    : Object.fromEntries(
+        Object.entries({
+          ...value,
+          ...(value instanceof Error && errorFields(value)),
+        }).map(([key, item]) => [key, toLoggable(item, ancestors)])
+      )
+  // Only an ancestor is circular: the same object twice side by side is not.
+  ancestors.delete(value)
+  return copy
+}
+
 export class LocalLogger<Scope extends string = string> {
   /** The localStorage key the log persists under. */
   readonly storageKey: string
@@ -58,8 +98,9 @@ export class LocalLogger<Scope extends string = string> {
   }
 
   /**
-   * Logs a failure, with the thrown value spelled out as `message` and `stack`
-   * (an `Error` serializes to `{}` in JSON) beside `extra`.
+   * Logs a failure, with the thrown value spelled out beside `extra`: an
+   * `Error`'s `name`, `message`, `stack`, `cause`, and own fields, or a non-Error
+   * as its string `message`.
    */
   error(
     scope: Scope,
@@ -69,7 +110,7 @@ export class LocalLogger<Scope extends string = string> {
   ) {
     const thrown =
       error instanceof Error
-        ? { message: error.message, stack: error.stack }
+        ? { ...error, ...errorFields(error) }
         : { message: String(error) }
     this.push('error', scope, action, { ...thrown, ...extra })
   }
@@ -85,7 +126,8 @@ export class LocalLogger<Scope extends string = string> {
       ...(level !== 'info' && { level }),
       scope,
       action,
-      detail,
+      // Copied now, so it saves as it was when logged.
+      detail: toLoggable(detail),
     }
     this.unsavedEntries.push(entry)
     if (this.unsavedEntries.length > this.maxEntries) {

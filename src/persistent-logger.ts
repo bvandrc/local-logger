@@ -7,7 +7,7 @@
 
 // A dev dependency, inlined by the build -- see `tsdown.config.ts`.
 import { onAppLeave } from '@bvandrc/react-ui-hooks'
-import { isError, sortBy } from 'es-toolkit'
+import { isError, isNotNil, sortBy } from 'es-toolkit'
 import { serializeError } from 'serialize-error'
 
 import { toLoggable } from './utils'
@@ -35,6 +35,12 @@ export interface PersistentLoggerOptions {
    * @default 300
    */
   maxEntries?: number
+  /**
+   * Whether to echo each entry to the matching `console` method as it's logged.
+   *
+   * @default false
+   */
+  logToConsole?: boolean
 }
 
 export class PersistentLogger<Scope extends string = string> {
@@ -42,6 +48,8 @@ export class PersistentLogger<Scope extends string = string> {
   readonly storageKey: string
   /** How many entries the log keeps, with the default filled in. */
   readonly maxEntries: number
+  /** Whether each entry is echoed to the console as it's logged. */
+  readonly logToConsole: boolean
   /**
    * Logged since this page last wrote to storage. Storage itself is read only
    * when a report or a write needs it, so app load parses nothing.
@@ -50,7 +58,11 @@ export class PersistentLogger<Scope extends string = string> {
   /** Whether a save is already queued for an error just logged. */
   private isSaveQueued = false
 
-  constructor({ storageKey, maxEntries = 300 }: PersistentLoggerOptions) {
+  constructor({
+    storageKey,
+    maxEntries = 300,
+    logToConsole = false,
+  }: PersistentLoggerOptions) {
     if (storageKey.length === 0) {
       throw new RangeError('storageKey must not be empty')
     }
@@ -61,6 +73,7 @@ export class PersistentLogger<Scope extends string = string> {
     }
     this.storageKey = storageKey
     this.maxEntries = maxEntries
+    this.logToConsole = logToConsole
     // No page to leave while rendering on a server, and nothing to persist to.
     if (typeof document === 'undefined') return
     // Never unsubscribed: the logger lives as long as the page does.
@@ -68,10 +81,12 @@ export class PersistentLogger<Scope extends string = string> {
   }
 
   info(scope: Scope, action: string, detail?: unknown) {
+    this.echo('info', scope, action, detail)
     this.push('info', scope, action, detail)
   }
 
   warn(scope: Scope, action: string, detail?: unknown) {
+    this.echo('warn', scope, action, detail)
     this.push('warn', scope, action, detail)
   }
 
@@ -89,6 +104,8 @@ export class PersistentLogger<Scope extends string = string> {
     error: unknown,
     extra?: Record<string, unknown>
   ) {
+    // The thrown value itself, so the console can show it live, stack and all.
+    this.echo('error', scope, action, error, extra)
     this.push('error', scope, action, {
       // Serialized here, not left to `push`'s `toLoggable`: an `Error`'s
       // `name`, `message`, and `stack` aren't enumerable, so spreading the
@@ -101,6 +118,17 @@ export class PersistentLogger<Scope extends string = string> {
   /** A `.catch` handler that logs the rejection via `error` and swallows it. */
   catchTo(scope: Scope, action: string) {
     return (error: unknown) => this.error(scope, action, error)
+  }
+
+  /** Echoes an entry to the console, when `logToConsole` is on. */
+  private echo(
+    level: LogLevel,
+    scope: Scope,
+    action: string,
+    ...details: unknown[]
+  ) {
+    if (!this.logToConsole) return
+    console[level](`[${scope}] ${action}`, ...details.filter(isNotNil))
   }
 
   private push(level: LogLevel, scope: Scope, action: string, detail: unknown) {

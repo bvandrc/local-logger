@@ -135,9 +135,7 @@ describe('useLogOnce', () => {
 
 describe('getLoggerHooks', () => {
   it('logs to the logger it was given', () => {
-    const logger = new PersistentLogger({
-      storageKey: 'test-log-given',
-    })
+    const logger = new PersistentLogger({ storageKey: 'test-log-given' })
     const { useLogOnce: useLogOnceToGiven } = getLoggerHooks(logger)
     renderHook(() => useLogOnceToGiven('cart', 'given:once', true))
     expect(logger.getEntries()).toEqual([

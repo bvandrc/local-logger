@@ -5,7 +5,7 @@
 
 import { useEffect, useRef } from 'react'
 
-import { LocalLogger, type LocalLoggerOptions } from './local-logger'
+import { LocalLogger, type LocalLoggerOptions } from './persistent-logger'
 
 /** React hooks that log to `logger`. */
 export const getLoggerHooks = <Scope extends string>(

@@ -1,4 +1,4 @@
-import { LocalLogger, type LogEntry } from '../local-logger'
+import { LocalLogger, type LogEntry } from '../persistent-logger'
 
 const STORAGE_KEY = 'test-local-log'
 

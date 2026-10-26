@@ -1,5 +1,5 @@
 {
-  "name": "local-logger",
+  "name": "persistent-logger",
   "version": "1.0.0",
   "description": "A persistent on-device log for browser diagnostics reports, kept in localStorage so it survives reloads, app updates, and a phone killing a backgrounded tab. Framework-agnostic, with optional React hooks.",
   "keywords": [
@@ -28,8 +28,8 @@
       "default": "./dist/index.mjs"
     },
     "./react": {
-      "types": "./dist/local-logger-react.d.mts",
-      "default": "./dist/local-logger-react.mjs"
+      "types": "./dist/persistent-logger-react.d.mts",
+      "default": "./dist/persistent-logger-react.mjs"
     }
   },
   "files": [

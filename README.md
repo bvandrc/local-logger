@@ -1,17 +1,17 @@
-# local-logger
+# persistent-logger
 
 A persistent on-device log for browser diagnostics reports. It's kept in `localStorage`, so a report still covers what happened before a reload, an app update, or a phone killing a backgrounded tab. Framework-agnostic, with optional React hooks.
 
 ```bash
-npm install local-logger
+npm install persistent-logger
 ```
 
-ESM only, with types included. React 18 or 19 is an optional peer, needed only for `local-logger/react`.
+ESM only, with types included. React 18 or 19 is an optional peer, needed only for `persistent-logger/react`.
 
 ## Usage
 
 ```ts
-import { LocalLogger } from 'local-logger'
+import { LocalLogger } from 'persistent-logger'
 
 type Scope = 'api' | 'auth' | 'sync'
 
@@ -55,7 +55,7 @@ Saving runs on `visibilitychange` to hidden as well as `pagehide`, since a phone
 A copy of `value` that saves cleanly as JSON: any `Error` in it is spelled out rather than saved as `{}`, and circular references are cut. The logger runs every `detail` through it, and it's handy for a report built outside the logger:
 
 ```ts
-import { toLoggable } from 'local-logger'
+import { toLoggable } from 'persistent-logger'
 
 JSON.stringify(toLoggable({ failed: new TypeError('offline') }))
 ```
@@ -63,7 +63,7 @@ JSON.stringify(toLoggable({ failed: new TypeError('offline') }))
 ## React
 
 ```ts
-import { createLocalLogger } from 'local-logger/react'
+import { createLocalLogger } from 'persistent-logger/react'
 
 export const { logger: log, useLogDuration, useLogOnChange, useLogOnce } =
   createLocalLogger<Scope>({ storageKey: 'my-app-log' })

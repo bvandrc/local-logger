@@ -17,10 +17,10 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/bvandrc/local-logger.git"
+    "url": "git+https://github.com/bvandrc/persistent-logger.git"
   },
-  "homepage": "https://github.com/bvandrc/local-logger#readme",
-  "bugs": "https://github.com/bvandrc/local-logger/issues",
+  "homepage": "https://github.com/bvandrc/persistent-logger#readme",
+  "bugs": "https://github.com/bvandrc/persistent-logger/issues",
   "type": "module",
   "exports": {
     ".": {

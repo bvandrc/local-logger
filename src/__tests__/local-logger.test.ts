@@ -53,6 +53,19 @@ describe('LocalLogger.withScope', () => {
   })
 })
 
+describe('LocalLogger.clear', () => {
+  it('empties what is stored and what is not yet saved', () => {
+    const logger = createLogger()
+    logger.info('cart', 'clear:saved')
+    leavePage()
+    logger.info('cart', 'clear:unsaved')
+    logger.clear()
+    expect(logger.getEntries()).toEqual([])
+    leavePage()
+    expect(createLogger().getEntries()).toEqual([])
+  })
+})
+
 describe('LocalLogger persistence', () => {
   /**
    * A fresh logger, as a reload or a relaunch gets one. Each case writes

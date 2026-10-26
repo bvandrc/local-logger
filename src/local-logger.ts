@@ -128,6 +128,16 @@ export class LocalLogger<Scope extends string = string> {
     return [...stored, ...this.unsavedEntries].slice(-this.maxEntries)
   }
 
+  /** Empties the log, both what's stored and what this page hasn't saved yet. */
+  clear() {
+    this.unsavedEntries = []
+    try {
+      localStorage.removeItem(this.storageKey)
+    } catch {
+      // Storage blocked: there was nothing stored to clear.
+    }
+  }
+
   private persist() {
     try {
       localStorage.setItem(this.storageKey, JSON.stringify(this.getEntries()))

@@ -1,6 +1,6 @@
 {
   "name": "persistent-logger",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "A persistent on-device log for browser diagnostics reports, kept in localStorage so it survives reloads, app updates, and a phone killing a backgrounded tab. Framework-agnostic, with optional React hooks.",
   "keywords": [
     "logger",

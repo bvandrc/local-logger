@@ -25,7 +25,7 @@ fetchItems().catch(log.catchTo('api', 'items.list:failed'))
 const report = JSON.stringify(log.getEntries(), null, 2)
 ```
 
-Logging only appends to memory. The log is written to storage when the page is hidden or unloads, and read back only when `getEntries` asks for it, so app load parses nothing and a busy log costs no storage writes.
+Logging only appends to memory. The log is written to storage when the page is hidden or unloads, and read back only when `getEntries` asks for it, so app load parses nothing and a busy log costs no storage writes. An `error` is the exception: it's written straight away, since a tab that crashes fires nothing to save on, and errors logged together share one write.
 
 ## API
 
@@ -36,12 +36,13 @@ Logging only appends to memory. The log is written to storage when the page is h
 | `storageKey` | (required) | The `localStorage` key the log persists under. Must not be empty. |
 | `maxEntries` | `300` | How many entries to keep; the oldest go first. Must be a positive integer. |
 | `maxStoredLength` | `500_000` | How long the stored log may grow, in characters of its JSON, so one large `detail` can't fill the origin's storage quota. The oldest entries go first, and an entry too long to fit on its own is stored with its `detail` replaced by `'[Omitted: too long to store]'`. Must be a positive integer. |
+| `logToConsole` | `false` | Whether to echo each entry to `console.info`, `console.warn`, or `console.error` as it's logged. |
 
 | Method | What it does |
 | --- | --- |
 | `info(scope, action, detail?)` | Logs an entry. |
 | `warn(scope, action, detail?)` | Logs an entry at `warn`. |
-| `error(scope, action, error, extra?)` | Logs a caught error at `error`, along with any `extra` details. An `Error` is saved as its `name`, `message`, `stack`, and `cause`, plus any fields of its own, like `code`. |
+| `error(scope, action, error, extra?)` | Logs a caught error at `error`, along with any `extra` details, and writes it to storage straight away. An `Error` is saved as its `name`, `message`, `stack`, and `cause`, plus any fields of its own, like `code`. |
 | `catchTo(scope, action)` | A `.catch` handler that logs the rejection via `error` and swallows it. |
 | `withScope(scope)` | The same four methods with `scope` already filled in, for a module that logs under one scope throughout. |
 | `getEntries()` | Every entry still kept, across sessions and tabs, oldest first. |

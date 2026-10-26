@@ -144,6 +144,34 @@ describe('PersistentLogger persistence', () => {
     expect(actions).toEqual(expect.arrayContaining(['tab:first', 'tab:second']))
   })
 
+  it('saves an error without waiting for the page to hide', async () => {
+    reload().error('sync', 'save:failed', new Error('offline'))
+    await Promise.resolve()
+    expect(reload().getEntries()).toContainEqual(
+      expect.objectContaining({ level: 'error', action: 'save:failed' })
+    )
+  })
+
+  it('saves errors logged together in one write', async () => {
+    const logger = reload()
+    const setItemSpy = vi.spyOn(localStorage, 'setItem')
+    for (const ACTION of ['burst:1', 'burst:2', 'burst:3']) {
+      logger.error('sync', ACTION, new Error('offline'))
+    }
+    await Promise.resolve()
+    const writtenKeys = setItemSpy.mock.calls.map(([key]) => key)
+    setItemSpy.mockRestore()
+    expect(writtenKeys).toEqual([STORAGE_KEY])
+  })
+
+  it('leaves info and warn unsaved until the page hides', async () => {
+    const logger = reload()
+    logger.info('cart', 'unsaved:info')
+    logger.warn('cart', 'unsaved:warn')
+    await Promise.resolve()
+    expect(localStorage.getItem(STORAGE_KEY)).toBeNull()
+  })
+
   it('writes an entry only once across repeated hides', () => {
     const logger = reload()
     logger.info('cart', 'hide:once')

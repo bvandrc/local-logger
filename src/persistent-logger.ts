@@ -7,7 +7,7 @@
 
 // A dev dependency, inlined by the build -- see `tsdown.config.ts`.
 import { onAppLeave } from '@bvandrc/react-ui-hooks'
-import { isError, sortBy, takeRightWhile } from 'es-toolkit'
+import { isError, isNotNil, sortBy, takeRightWhile } from 'es-toolkit'
 import { serializeError } from 'serialize-error'
 
 import { toLoggable } from './utils'
@@ -47,6 +47,12 @@ export interface PersistentLoggerOptions {
    * @default 500_000
    */
   maxStoredLength?: number
+  /**
+   * Whether to echo each entry to the matching `console` method as it's logged.
+   *
+   * @default false
+   */
+  logToConsole?: boolean
 }
 
 /** The newest of `entries`, as one JSON array no longer than `maxLength`. */
@@ -89,16 +95,21 @@ export class PersistentLogger<Scope extends string = string> {
   readonly maxEntries: number
   /** How long the stored log may grow, with the default filled in. */
   readonly maxStoredLength: number
+  /** Whether each entry is echoed to the console as it's logged. */
+  readonly logToConsole: boolean
   /**
    * Logged since this page last wrote to storage. Storage itself is read only
    * when a report or a write needs it, so app load parses nothing.
    */
   private unsavedEntries: LogEntry[] = []
+  /** Whether a save is already queued for an error just logged. */
+  private isSaveQueued = false
 
   constructor({
     storageKey,
     maxEntries = 300,
     maxStoredLength = 500_000,
+    logToConsole = false,
   }: PersistentLoggerOptions) {
     if (storageKey.length === 0) {
       throw new RangeError('storageKey must not be empty')
@@ -108,6 +119,7 @@ export class PersistentLogger<Scope extends string = string> {
     this.storageKey = storageKey
     this.maxEntries = maxEntries
     this.maxStoredLength = maxStoredLength
+    this.logToConsole = logToConsole
     // No page to leave while rendering on a server, and nothing to persist to.
     if (typeof document === 'undefined') return
     // Never unsubscribed: the logger lives as long as the page does.
@@ -115,10 +127,12 @@ export class PersistentLogger<Scope extends string = string> {
   }
 
   info(scope: Scope, action: string, detail?: unknown) {
+    this.echo('info', scope, action, detail)
     this.push('info', scope, action, detail)
   }
 
   warn(scope: Scope, action: string, detail?: unknown) {
+    this.echo('warn', scope, action, detail)
     this.push('warn', scope, action, detail)
   }
 
@@ -127,7 +141,8 @@ export class PersistentLogger<Scope extends string = string> {
    *
    * An `Error` is saved as its `name`, `message`, `stack`, and `cause`, plus any
    * fields of its own, like `code`. Anything else that was thrown is saved as
-   * it is, under `thrown`.
+   * it is, under `thrown`. Written to storage straight away, rather than when
+   * the page hides, so a crash right after can't lose it.
    */
   error(
     scope: Scope,
@@ -135,6 +150,8 @@ export class PersistentLogger<Scope extends string = string> {
     error: unknown,
     extra?: Record<string, unknown>
   ) {
+    // The thrown value itself, so the console can show it live, stack and all.
+    this.echo('error', scope, action, error, extra)
     this.push('error', scope, action, {
       // Serialized here, not left to `push`'s `toLoggable`: an `Error`'s
       // `name`, `message`, and `stack` aren't enumerable, so spreading the
@@ -147,6 +164,17 @@ export class PersistentLogger<Scope extends string = string> {
   /** A `.catch` handler that logs the rejection via `error` and swallows it. */
   catchTo(scope: Scope, action: string) {
     return (error: unknown) => this.error(scope, action, error)
+  }
+
+  /** Echoes an entry to the console, when `logToConsole` is on. */
+  private echo(
+    level: LogLevel,
+    scope: Scope,
+    action: string,
+    ...details: unknown[]
+  ) {
+    if (!this.logToConsole) return
+    console[level](`[${scope}] ${action}`, ...details.filter(isNotNil))
   }
 
   private push(level: LogLevel, scope: Scope, action: string, detail: unknown) {
@@ -162,6 +190,23 @@ export class PersistentLogger<Scope extends string = string> {
     if (this.unsavedEntries.length > this.maxEntries) {
       this.unsavedEntries = this.unsavedEntries.slice(-this.maxEntries)
     }
+    // An error can be the last thing logged before the tab crashes, which
+    // fires nothing to save on, so it's saved without waiting for the page to
+    // hide.
+    if (level === 'error') this.queueSave()
+  }
+
+  /**
+   * Saves once the code running now finishes, so errors logged together are
+   * saved in one write.
+   */
+  private queueSave() {
+    if (this.isSaveQueued) return
+    this.isSaveQueued = true
+    queueMicrotask(() => {
+      this.isSaveQueued = false
+      this.persist()
+    })
   }
 
   /**

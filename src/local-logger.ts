@@ -44,8 +44,10 @@ const readStoredEntries = (storageKey: string): LogEntry[] => {
 }
 
 export class LocalLogger<Scope extends string = string> {
-  private readonly storageKey: string
-  private readonly maxEntries: number
+  /** The localStorage key the log persists under. */
+  readonly storageKey: string
+  /** How many entries the log keeps, with the default filled in. */
+  readonly maxEntries: number
   /**
    * Logged since this page last wrote to storage. Storage itself is read only
    * when a report or a write needs it, so app load parses nothing.

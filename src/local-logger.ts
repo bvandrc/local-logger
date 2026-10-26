@@ -7,6 +7,7 @@
 
 // A dev dependency, inlined by the build -- see `tsdown.config.ts`.
 import { onAppLeave } from '@bvandrc/react-ui-hooks'
+import { sortBy } from 'es-toolkit'
 
 /** `info` is the default, and the one level an entry leaves unsaid. */
 export type LogLevel = 'info' | 'warn' | 'error'
@@ -21,10 +22,12 @@ export interface LogEntry {
 }
 
 export interface LocalLoggerOptions {
-  /** The localStorage key the log persists under. */
+  /** The localStorage key the log persists under. Must not be empty. */
   storageKey: string
   /**
    * How many entries to keep, newest first.
+   *
+   * Must be a positive integer: the constructor throws a `RangeError` otherwise.
    *
    * @default 300
    */
@@ -62,6 +65,13 @@ const serializeNewest = (entries: LogEntry[], maxLength: number) => {
   return `[${kept.reverse().join(',')}]`
 }
 
+/** Throws a `RangeError` unless the option `name` is a positive integer. */
+const assertPositiveInteger = (name: string, value: number) => {
+  if (!Number.isInteger(value) || value < 1) {
+    throw new RangeError(`${name} must be a positive integer, got ${value}`)
+  }
+}
+
 export class LocalLogger<Scope extends string = string> {
   /** The localStorage key the log persists under. */
   readonly storageKey: string
@@ -80,11 +90,11 @@ export class LocalLogger<Scope extends string = string> {
     maxEntries = 300,
     maxStoredLength = 500_000,
   }: LocalLoggerOptions) {
-    if (!Number.isInteger(maxStoredLength) || maxStoredLength < 1) {
-      throw new RangeError(
-        `maxStoredLength must be a positive integer, got ${maxStoredLength}`
-      )
+    if (storageKey.length === 0) {
+      throw new RangeError('storageKey must not be empty')
     }
+    assertPositiveInteger('maxEntries', maxEntries)
+    assertPositiveInteger('maxStoredLength', maxStoredLength)
     this.storageKey = storageKey
     this.maxEntries = maxEntries
     this.maxStoredLength = maxStoredLength
@@ -170,14 +180,10 @@ export class LocalLogger<Scope extends string = string> {
     } catch {
       // Unparseable, or storage blocked: start over too.
     }
-    return (
-      [...stored, ...this.unsavedEntries]
-        // Tabs append in the order they write, not the order they logged in.
-        // ISO timestamps sort as strings, and the sort is stable for ties.
-        .sort((a, b) =>
-          a.timestamp < b.timestamp ? -1 : a.timestamp > b.timestamp ? 1 : 0
-        )
-        .slice(-this.maxEntries)
+    // Tabs append in the order they write, not the order they logged in.
+    // ISO timestamps sort as strings, and the sort is stable for ties.
+    return sortBy([...stored, ...this.unsavedEntries], ['timestamp']).slice(
+      -this.maxEntries
     )
   }
 

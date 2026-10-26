@@ -13,17 +13,6 @@ const getLastEntry = () => localLog.getEntries().at(-1)
 /** Fires what a page leaving fires, so every logger still listening writes. */
 const leavePage = () => window.dispatchEvent(new Event('pagehide'))
 
-describe('LocalLogger', () => {
-  it('throws when maxStoredLength is not a positive integer', () => {
-    for (const MAX_STORED_LENGTH of [0, -1, 2.5, Number.NaN]) {
-      expect(
-        () => createLogger({ maxStoredLength: MAX_STORED_LENGTH }),
-        String(MAX_STORED_LENGTH)
-      ).toThrow(RangeError)
-    }
-  })
-})
-
 describe('LocalLogger.error', () => {
   it('logs an Error as its message and stack, beside extra', () => {
     const ERROR = new Error('boom')

@@ -42,7 +42,6 @@ export class LocalLogger<Scope extends string = string> {
    */
   private unsavedEntries: LogEntry[] = []
 
-  /** Safe to call during server rendering, where it logs to memory only. */
   constructor({ storageKey, maxEntries = 300 }: LocalLoggerOptions) {
     this.storageKey = storageKey
     this.maxEntries = maxEntries

@@ -82,6 +82,8 @@ export class LocalLogger<Scope extends string = string> {
     this.storageKey = storageKey
     this.maxEntries = maxEntries
     this.maxStoredLength = maxStoredLength
+    // No page to leave while rendering on a server, and nothing to persist to.
+    if (typeof document === 'undefined') return
     // Never unsubscribed: the logger lives as long as the page does.
     onAppLeave(() => this.persist())
   }

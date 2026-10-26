@@ -152,4 +152,13 @@ describe('LocalLogger persistence', () => {
     // Not pushed out by the entry that was skipped.
     expect(actions).toContain('small:before')
   })
+
+  it('logs to memory where there is no document, as on a server', () => {
+    vi.stubGlobal('document', undefined)
+    const logger = reload()
+    logger.info('app', 'server:render')
+    expect(logger.getEntries().at(-1)).toMatchObject({
+      action: 'server:render',
+    })
+  })
 })

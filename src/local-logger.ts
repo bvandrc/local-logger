@@ -30,10 +30,13 @@ export interface LocalLoggerOptions {
    */
   maxEntries?: number
   /**
-   * How long the stored log may grow, in characters of its JSON; defaults to
-   * 500,000, a tenth of what browsers commonly give an origin's localStorage.
+   * How long the stored log may grow, in characters of its JSON.
+   *
    * The oldest entries go first, and an entry too long to fit on its own is
-   * never stored.
+   * never stored. The default is a tenth of what browsers commonly give an
+   * origin's localStorage.
+   *
+   * @default 500_000
    */
   maxStoredLength?: number
 }

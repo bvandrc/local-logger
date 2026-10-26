@@ -7,7 +7,7 @@
 
 // A dev dependency, inlined by the build -- see `tsdown.config.ts`.
 import { onAppLeave } from '@bvandrc/react-ui-hooks'
-import { isError, mapValues, pick, sortBy, takeRight } from 'es-toolkit'
+import { isError, mapValues, pick, sortBy } from 'es-toolkit'
 
 /** `info` is the default, and the one level an entry leaves unsaid. */
 export type LogLevel = 'info' | 'warn' | 'error'
@@ -142,7 +142,7 @@ export class LocalLogger<Scope extends string = string> {
     }
     this.unsavedEntries.push(entry)
     if (this.unsavedEntries.length > this.maxEntries) {
-      this.unsavedEntries = takeRight(this.unsavedEntries, this.maxEntries)
+      this.unsavedEntries = this.unsavedEntries.slice(-this.maxEntries)
     }
   }
 
@@ -178,11 +178,10 @@ export class LocalLogger<Scope extends string = string> {
     } catch {
       // Unparseable, or storage blocked: start over too.
     }
-    return takeRight(
-      // Tabs append in the order they write, not the order they logged in.
-      // ISO timestamps sort as strings, and the sort is stable for ties.
-      sortBy([...stored, ...this.unsavedEntries], ['timestamp']),
-      this.maxEntries
+    // Tabs append in the order they write, not the order they logged in.
+    // ISO timestamps sort as strings, and the sort is stable for ties.
+    return sortBy([...stored, ...this.unsavedEntries], ['timestamp']).slice(
+      -this.maxEntries
     )
   }
 

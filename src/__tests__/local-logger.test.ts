@@ -198,6 +198,16 @@ describe('LocalLogger persistence', () => {
     })
   })
 
+  it('keeps nothing when maxEntries is 0', () => {
+    const STORED = [
+      { timestamp: new Date(0).toISOString(), scope: 'cart', action: 'stored' },
+    ] satisfies LogEntry[]
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(STORED))
+    const logger = new LocalLogger({ storageKey: STORAGE_KEY, maxEntries: 0 })
+    logger.info('cart', 'kept:none')
+    expect(logger.getEntries()).toEqual([])
+  })
+
   it('starts over from a stored value it cannot read', () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ not: 'a list' }))
     expect(reload().getEntries()).toEqual([])

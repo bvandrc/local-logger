@@ -7,7 +7,7 @@
 
 // A dev dependency, inlined by the build -- see `tsdown.config.ts`.
 import { onAppLeave } from '@bvandrc/react-ui-hooks'
-import { mapValues } from 'es-toolkit'
+import { isError, mapValues, pick, sortBy, takeRight } from 'es-toolkit'
 
 /** `info` is the default, and the one level an entry leaves unsaid. */
 export type LogLevel = 'info' | 'warn' | 'error'
@@ -36,12 +36,16 @@ export interface LocalLoggerOptions {
  * What an `Error` holds that a spread leaves out, being inherited or
  * non-enumerable.
  */
-const errorFields = (error: Error) => ({
+const errorFields = (
+  error: Error & Partial<Pick<AggregateError, 'errors'>>
+) => ({
+  // Read directly: `name` is inherited everywhere, and `stack` is in Firefox
+  // and Safari, where `pick` (own properties only) would drop it.
   name: error.name,
   message: error.message,
   stack: error.stack,
-  ...('cause' in error && { cause: error.cause }),
-  ...('errors' in error && { errors: error.errors }),
+  // Own properties when present, and absent rather than undefined otherwise.
+  ...pick(error, ['cause', 'errors']),
 })
 
 /**
@@ -62,7 +66,7 @@ const toLoggable = (
   const copy = Array.isArray(value)
     ? value.map((item) => toLoggable(item, ancestors))
     : mapValues(
-        { ...value, ...(value instanceof Error && errorFields(value)) },
+        { ...value, ...(isError(value) && errorFields(value)) },
         (item) => toLoggable(item, ancestors)
       )
   // Only an ancestor is circular: the same object twice side by side is not.
@@ -109,10 +113,9 @@ export class LocalLogger<Scope extends string = string> {
     error: unknown,
     extra?: Record<string, unknown>
   ) {
-    const thrown =
-      error instanceof Error
-        ? { ...error, ...errorFields(error) }
-        : { message: String(error) }
+    const thrown = isError(error)
+      ? { ...error, ...errorFields(error) }
+      : { message: String(error) }
     this.push('error', scope, action, { ...thrown, ...extra })
   }
 
@@ -132,7 +135,7 @@ export class LocalLogger<Scope extends string = string> {
     }
     this.unsavedEntries.push(entry)
     if (this.unsavedEntries.length > this.maxEntries) {
-      this.unsavedEntries = this.unsavedEntries.slice(-this.maxEntries)
+      this.unsavedEntries = takeRight(this.unsavedEntries, this.maxEntries)
     }
   }
 
@@ -168,14 +171,11 @@ export class LocalLogger<Scope extends string = string> {
     } catch {
       // Unparseable, or storage blocked: start over too.
     }
-    return (
-      [...stored, ...this.unsavedEntries]
-        // Tabs append in the order they write, not the order they logged in.
-        // ISO timestamps sort as strings, and the sort is stable for ties.
-        .sort((a, b) =>
-          a.timestamp < b.timestamp ? -1 : a.timestamp > b.timestamp ? 1 : 0
-        )
-        .slice(-this.maxEntries)
+    return takeRight(
+      // Tabs append in the order they write, not the order they logged in.
+      // ISO timestamps sort as strings, and the sort is stable for ties.
+      sortBy([...stored, ...this.unsavedEntries], ['timestamp']),
+      this.maxEntries
     )
   }
 

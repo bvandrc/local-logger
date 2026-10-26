@@ -36,8 +36,7 @@ export interface PersistentLoggerOptions {
    */
   maxEntries?: number
   /**
-   * Whether to echo each entry to the matching `console` method as it's
-   * logged, for development.
+   * Whether to echo each entry to the matching `console` method as it's logged.
    *
    * @default false
    */

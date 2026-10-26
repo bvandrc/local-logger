@@ -6,7 +6,7 @@ A persistent on-device log for browser diagnostics reports. It's kept in `localS
 npm install local-logger
 ```
 
-ESM only, with types included. Its dependencies are [es-toolkit](https://es-toolkit.dev) and [serialize-error](https://github.com/sindresorhus/serialize-error); React 18 or 19 is an optional peer, needed only for `local-logger/react`.
+ESM only, with types included. React 18 or 19 is an optional peer, needed only for `local-logger/react`.
 
 ## Usage
 

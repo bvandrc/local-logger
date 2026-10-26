@@ -6,7 +6,7 @@ A persistent on-device log for browser diagnostics reports. It's kept in `localS
 npm install local-logger
 ```
 
-ESM only, with types included. No dependencies; React 18 or 19 is an optional peer, needed only for `local-logger/react`.
+ESM only, with types included. Its one dependency is [es-toolkit](https://es-toolkit.dev); React 18 or 19 is an optional peer, needed only for `local-logger/react`.
 
 ## Usage
 
@@ -34,7 +34,7 @@ Logging only appends to memory. The log is written to storage when the page is h
 | Option | Default | What it does |
 | --- | --- | --- |
 | `storageKey` | (required) | The `localStorage` key the log persists under. |
-| `maxEntries` | `300` | How many entries to keep; the oldest go first. |
+| `maxEntries` | `300` | How many entries to keep; the oldest go first. Must be a positive integer, or the constructor throws a `RangeError`. |
 
 | Method | What it does |
 | --- | --- |

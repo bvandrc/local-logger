@@ -7,6 +7,7 @@
 
 // A dev dependency, inlined by the build -- see `tsdown.config.ts`.
 import { onAppLeave } from '@bvandrc/react-ui-hooks'
+import { sortBy, takeRight } from 'es-toolkit'
 
 /** `info` is the default, and the one level an entry leaves unsaid. */
 export type LogLevel = 'info' | 'warn' | 'error'
@@ -26,6 +27,8 @@ export interface LocalLoggerOptions {
   /**
    * How many entries to keep, newest first.
    *
+   * Must be a positive integer: the constructor throws a `RangeError` otherwise.
+   *
    * @default 300
    */
   maxEntries?: number
@@ -43,6 +46,11 @@ export class LocalLogger<Scope extends string = string> {
   private unsavedEntries: LogEntry[] = []
 
   constructor({ storageKey, maxEntries = 300 }: LocalLoggerOptions) {
+    if (!Number.isInteger(maxEntries) || maxEntries < 1) {
+      throw new RangeError(
+        `maxEntries must be a positive integer, got ${maxEntries}`
+      )
+    }
     this.storageKey = storageKey
     this.maxEntries = maxEntries
     // No page to leave while rendering on a server, and nothing to persist to.
@@ -91,7 +99,7 @@ export class LocalLogger<Scope extends string = string> {
     }
     this.unsavedEntries.push(entry)
     if (this.unsavedEntries.length > this.maxEntries) {
-      this.unsavedEntries = this.unsavedEntries.slice(-this.maxEntries)
+      this.unsavedEntries = takeRight(this.unsavedEntries, this.maxEntries)
     }
   }
 
@@ -127,14 +135,11 @@ export class LocalLogger<Scope extends string = string> {
     } catch {
       // Unparseable, or storage blocked: start over too.
     }
-    return (
-      [...stored, ...this.unsavedEntries]
-        // Tabs append in the order they write, not the order they logged in.
-        // ISO timestamps sort as strings, and the sort is stable for ties.
-        .sort((a, b) =>
-          a.timestamp < b.timestamp ? -1 : a.timestamp > b.timestamp ? 1 : 0
-        )
-        .slice(-this.maxEntries)
+    return takeRight(
+      // Tabs append in the order they write, not the order they logged in.
+      // ISO timestamps sort as strings, and the sort is stable for ties.
+      sortBy([...stored, ...this.unsavedEntries], ['timestamp']),
+      this.maxEntries
     )
   }
 

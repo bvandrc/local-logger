@@ -73,6 +73,34 @@ describe('LocalLogger.withScope', () => {
   })
 })
 
+describe('LocalLogger.clear', () => {
+  it('empties what is stored and what is not yet saved', () => {
+    const logger = createLogger()
+    logger.info('cart', 'clear:saved')
+    leavePage()
+    logger.info('cart', 'clear:unsaved')
+    logger.clear()
+    expect(logger.getEntries()).toEqual([])
+    leavePage()
+    expect(createLogger().getEntries()).toEqual([])
+  })
+})
+
+describe('LocalLogger.getEntries', () => {
+  it('orders entries by when they were logged, across tabs', () => {
+    const STORED = [
+      { timestamp: '2026-01-01T00:00:02.000Z', scope: 'cart', action: 'b' },
+      // A second tab wrote after the first, but had logged earlier.
+      { timestamp: '2026-01-01T00:00:01.000Z', scope: 'cart', action: 'a' },
+    ] satisfies LogEntry[]
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(STORED))
+    const actions = createLogger()
+      .getEntries()
+      .map(({ action }) => action)
+    expect(actions).toEqual(['a', 'b'])
+  })
+})
+
 describe('LocalLogger persistence', () => {
   /**
    * A fresh logger, as a reload or a relaunch gets one. Each case writes
@@ -173,5 +201,14 @@ describe('LocalLogger persistence', () => {
   it('starts over from a stored value it cannot read', () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ not: 'a list' }))
     expect(reload().getEntries()).toEqual([])
+  })
+
+  it('logs to memory where there is no document, as on a server', () => {
+    vi.stubGlobal('document', undefined)
+    const logger = reload()
+    logger.info('app', 'server:render')
+    expect(logger.getEntries().at(-1)).toMatchObject({
+      action: 'server:render',
+    })
   })
 })

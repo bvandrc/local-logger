@@ -47,6 +47,8 @@ export class PersistentLogger<Scope extends string = string> {
    * when a report or a write needs it, so app load parses nothing.
    */
   private unsavedEntries: LogEntry[] = []
+  /** Whether a save is already queued for an error just logged. */
+  private isSaveQueued = false
 
   constructor({ storageKey, maxEntries = 300 }: PersistentLoggerOptions) {
     if (storageKey.length === 0) {
@@ -78,7 +80,8 @@ export class PersistentLogger<Scope extends string = string> {
    *
    * An `Error` is saved as its `name`, `message`, `stack`, and `cause`, plus any
    * fields of its own, like `code`. Anything else that was thrown is saved as
-   * it is, under `thrown`.
+   * it is, under `thrown`. Written to storage straight away, rather than when
+   * the page hides, so a crash right after can't lose it.
    */
   error(
     scope: Scope,
@@ -113,6 +116,23 @@ export class PersistentLogger<Scope extends string = string> {
     if (this.unsavedEntries.length > this.maxEntries) {
       this.unsavedEntries = this.unsavedEntries.slice(-this.maxEntries)
     }
+    // An error can be the last thing logged before the tab crashes, which
+    // fires nothing to save on, so it's saved without waiting for the page to
+    // hide.
+    if (level === 'error') this.queueSave()
+  }
+
+  /**
+   * Saves once the code running now finishes, so errors logged together are
+   * saved in one write.
+   */
+  private queueSave() {
+    if (this.isSaveQueued) return
+    this.isSaveQueued = true
+    queueMicrotask(() => {
+      this.isSaveQueued = false
+      this.persist()
+    })
   }
 
   /**

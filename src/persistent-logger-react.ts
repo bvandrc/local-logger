@@ -1,15 +1,18 @@
 /**
- * @fileoverview React hooks that log to a `LocalLogger`, published as the
+ * @fileoverview React hooks that log to a `PersistentLogger`, published as the
  * package's `/react` entry so the core needs no React.
  */
 
 import { useEffect, useRef } from 'react'
 
-import { LocalLogger, type LocalLoggerOptions } from './local-logger'
+import {
+  PersistentLogger,
+  type PersistentLoggerOptions,
+} from './persistent-logger'
 
 /** React hooks that log to `logger`. */
 export const getLoggerHooks = <Scope extends string>(
-  logger: LocalLogger<Scope>
+  logger: PersistentLogger<Scope>
 ) => ({
   /**
    * Logs `<action>:start` when `active` turns true, and `<action>:end` with the
@@ -65,10 +68,10 @@ export const getLoggerHooks = <Scope extends string>(
   },
 })
 
-/** A new `LocalLogger`, alongside the React hooks that log to it. */
-export const createLocalLogger = <Scope extends string = string>(
-  options: LocalLoggerOptions
+/** A new `PersistentLogger`, alongside the React hooks that log to it. */
+export const createPersistentLogger = <Scope extends string = string>(
+  options: PersistentLoggerOptions
 ) => {
-  const logger = new LocalLogger<Scope>(options)
+  const logger = new PersistentLogger<Scope>(options)
   return { logger, ...getLoggerHooks(logger) }
 }

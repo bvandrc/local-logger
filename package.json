@@ -1,6 +1,6 @@
 {
-  "name": "local-logger",
-  "version": "0.1.0",
+  "name": "persistent-logger",
+  "version": "1.0.0",
   "description": "A persistent on-device log for browser diagnostics reports, kept in localStorage so it survives reloads, app updates, and a phone killing a backgrounded tab. Framework-agnostic, with optional React hooks.",
   "keywords": [
     "logger",
@@ -17,10 +17,10 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/bvandrc/local-logger.git"
+    "url": "git+https://github.com/bvandrc/persistent-logger.git"
   },
-  "homepage": "https://github.com/bvandrc/local-logger#readme",
-  "bugs": "https://github.com/bvandrc/local-logger/issues",
+  "homepage": "https://github.com/bvandrc/persistent-logger#readme",
+  "bugs": "https://github.com/bvandrc/persistent-logger/issues",
   "type": "module",
   "exports": {
     ".": {
@@ -28,8 +28,8 @@
       "default": "./dist/index.mjs"
     },
     "./react": {
-      "types": "./dist/local-logger-react.d.mts",
-      "default": "./dist/local-logger-react.mjs"
+      "types": "./dist/persistent-logger-react.d.mts",
+      "default": "./dist/persistent-logger-react.mjs"
     }
   },
   "files": [

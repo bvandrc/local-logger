@@ -24,7 +24,7 @@ export interface LogEntry {
   detail?: unknown
 }
 
-export interface LocalLoggerOptions {
+export interface PersistentLoggerOptions {
   /** The localStorage key the log persists under. Must not be empty. */
   storageKey: string
   /**
@@ -82,7 +82,7 @@ const assertPositiveInteger = (name: string, value: number) => {
   }
 }
 
-export class LocalLogger<Scope extends string = string> {
+export class PersistentLogger<Scope extends string = string> {
   /** The localStorage key the log persists under. */
   readonly storageKey: string
   /** How many entries the log keeps, with the default filled in. */
@@ -99,7 +99,7 @@ export class LocalLogger<Scope extends string = string> {
     storageKey,
     maxEntries = 300,
     maxStoredLength = 500_000,
-  }: LocalLoggerOptions) {
+  }: PersistentLoggerOptions) {
     if (storageKey.length === 0) {
       throw new RangeError('storageKey must not be empty')
     }

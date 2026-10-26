@@ -1,10 +1,10 @@
-import { LocalLogger, type LogEntry } from '../local-logger'
+import { type LogEntry, PersistentLogger } from '../persistent-logger'
 
-const STORAGE_KEY = 'test-local-log'
+const STORAGE_KEY = 'test-log'
 
 /** A logger as a page load gets one, persisting under `STORAGE_KEY`. */
 const createLogger = (options?: { maxStoredLength?: number }) =>
-  new LocalLogger({ storageKey: STORAGE_KEY, ...options })
+  new PersistentLogger({ storageKey: STORAGE_KEY, ...options })
 
 const localLog = createLogger()
 
@@ -13,7 +13,7 @@ const getLastEntry = () => localLog.getEntries().at(-1)
 /** Fires what a page leaving fires, so every logger still listening writes. */
 const leavePage = () => window.dispatchEvent(new Event('pagehide'))
 
-describe('LocalLogger.error', () => {
+describe('PersistentLogger.error', () => {
   it('logs an Error spelled out, beside extra', () => {
     const ERROR = new Error('boom')
     localLog.error('api', 'items.list:failed', ERROR, { status: 500 })
@@ -56,7 +56,7 @@ describe('LocalLogger.error', () => {
   })
 })
 
-describe('LocalLogger.catchTo', () => {
+describe('PersistentLogger.catchTo', () => {
   it('swallows a rejection and logs it as an error', async () => {
     await expect(
       Promise.reject(new Error('gone')).catch(
@@ -72,7 +72,7 @@ describe('LocalLogger.catchTo', () => {
   })
 })
 
-describe('LocalLogger.withScope', () => {
+describe('PersistentLogger.withScope', () => {
   it('logs under the scope it was given', () => {
     localLog.withScope('cart').warn('scoped:warn', { id: 1 })
     expect(getLastEntry()).toMatchObject({
@@ -84,7 +84,7 @@ describe('LocalLogger.withScope', () => {
   })
 })
 
-describe('LocalLogger.clear', () => {
+describe('PersistentLogger.clear', () => {
   it('empties what is stored and what is not yet saved', () => {
     const logger = createLogger()
     logger.info('cart', 'clear:saved')
@@ -97,7 +97,7 @@ describe('LocalLogger.clear', () => {
   })
 })
 
-describe('LocalLogger.getEntries', () => {
+describe('PersistentLogger.getEntries', () => {
   it('orders entries by when they were logged, across tabs', () => {
     const STORED = [
       { timestamp: '2026-01-01T00:00:02.000Z', scope: 'cart', action: 'b' },
@@ -112,7 +112,7 @@ describe('LocalLogger.getEntries', () => {
   })
 })
 
-describe('LocalLogger persistence', () => {
+describe('PersistentLogger persistence', () => {
   /**
    * A fresh logger, as a reload or a relaunch gets one. Each case writes
    * through its own: every earlier one is still listening, and the newest

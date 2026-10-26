@@ -18,8 +18,8 @@ export default defineConfig({
         : '[name].mjs',
   },
   deps: {
-    // A dev dependency, so bundled: what the core uses from it is inlined, and
-    // a consumer installs nothing for it.
+    // Bundled, so only a dev dependency: what the core uses from it is
+    // inlined, and a consumer installs nothing for it.
     onlyBundle: ['@bvandrc/react-ui-hooks'],
     // React is the one import the output may keep, and only `/react` has it.
     onlyImport: ['react'],

@@ -25,7 +25,7 @@ fetchItems().catch(log.catchTo('api', 'items.list:failed'))
 const report = JSON.stringify(log.getEntries(), null, 2)
 ```
 
-Logging only appends to memory. The log is written to storage when the page is hidden or unloads, and read back only when `getEntries` asks for it, so app load parses nothing and a busy log costs no storage writes.
+Logging only appends to memory. The log is written to storage when the page is hidden or unloads, and read back only when `getEntries` asks for it, so app load parses nothing and a busy log costs no storage writes. An `error` is the exception: it's written straight away, since a tab that crashes fires nothing to save on, and errors logged together share one write.
 
 ## API
 
@@ -40,7 +40,7 @@ Logging only appends to memory. The log is written to storage when the page is h
 | --- | --- |
 | `info(scope, action, detail?)` | Logs an entry. |
 | `warn(scope, action, detail?)` | Logs an entry at `warn`. |
-| `error(scope, action, error, extra?)` | Logs a caught error at `error`, along with any `extra` details. An `Error` is saved as its `name`, `message`, `stack`, and `cause`, plus any fields of its own, like `code`. |
+| `error(scope, action, error, extra?)` | Logs a caught error at `error`, along with any `extra` details, and writes it to storage straight away. An `Error` is saved as its `name`, `message`, `stack`, and `cause`, plus any fields of its own, like `code`. |
 | `catchTo(scope, action)` | A `.catch` handler that logs the rejection via `error` and swallows it. |
 | `withScope(scope)` | The same four methods with `scope` already filled in, for a module that logs under one scope throughout. |
 | `getEntries()` | Every entry still kept, across sessions and tabs, oldest first. |

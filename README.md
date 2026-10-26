@@ -58,6 +58,8 @@ export const { logger: log, useLogDuration, useLogOnChange, useLogOnce } =
   createLocalLogger<Scope>({ storageKey: 'my-app-log' })
 ```
 
+`getLoggerHooks(logger)` gives the same hooks for a `LocalLogger` you already have.
+
 | Hook | What it does |
 | --- | --- |
 | `useLogDuration(scope, action, active)` | Logs `<action>:start` when `active` turns true, and `<action>:end` with the milliseconds it lasted when it turns false or the component unmounts. |

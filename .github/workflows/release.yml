@@ -1,15 +1,16 @@
 name: Release
 
-# Publishing a GitHub release publishes the package at the version its
+# Publishing a GitHub release stages the package at the version its
 # `package.json` carries -- bump that first, then tag the release `v<version>`.
+# The staged version goes live once approved on npmjs.com.
 on:
   release:
     types: [published]
 
 permissions:
   contents: read
-  # Signs the npm provenance statement, and authenticates the publish through
-  # npm trusted publishing.
+  # Signs the npm provenance statement, and authenticates the staged publish
+  # through npm trusted publishing.
   id-token: write
 
 jobs:
@@ -27,6 +28,9 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Check the tag matches package.json
         run: test "v$(node -p 'require("./package.json").version')" = "${GITHUB_REF_NAME}"
-      # `prepublishOnly` runs the checks, the tests, and the build. A release
-      # checks out its tag rather than a branch, which pnpm's git checks reject.
-      - run: pnpm publish --no-git-checks --provenance
+      # `npm stage` needs a newer npm than Node ships.
+      - run: npm install --global npm@12
+      # Staged, not published: the version goes live only once it's approved on
+      # npmjs.com with 2FA. `prepublishOnly` still runs the checks, the tests,
+      # and the build first.
+      - run: npm stage publish --provenance

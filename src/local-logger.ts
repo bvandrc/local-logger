@@ -23,7 +23,11 @@ export interface LogEntry {
 export interface LocalLoggerOptions {
   /** The localStorage key the log persists under. */
   storageKey: string
-  /** How many entries to keep, newest first; defaults to 300. */
+  /**
+   * How many entries to keep, newest first.
+   *
+   * @default 300
+   */
   maxEntries?: number
 }
 

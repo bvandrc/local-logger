@@ -7,7 +7,10 @@
 
 // A dev dependency, inlined by the build -- see `tsdown.config.ts`.
 import { onAppLeave } from '@bvandrc/react-ui-hooks'
-import { sortBy } from 'es-toolkit'
+import { isError, sortBy } from 'es-toolkit'
+import { serializeError } from 'serialize-error'
+
+import { toLoggable } from './utils'
 
 /** `info` is the default, and the one level an entry leaves unsaid. */
 export type LogLevel = 'info' | 'warn' | 'error'
@@ -71,8 +74,11 @@ export class LocalLogger<Scope extends string = string> {
   }
 
   /**
-   * Logs a failure, with the thrown value spelled out as `message` and `stack`
-   * (an `Error` serializes to `{}` in JSON) beside `extra`.
+   * Logs a caught error, along with any `extra` details.
+   *
+   * An `Error` is saved as its `name`, `message`, `stack`, and `cause`, plus any
+   * fields of its own, like `code`. Anything else that was thrown is saved as
+   * it is, under `thrown`.
    */
   error(
     scope: Scope,
@@ -81,8 +87,10 @@ export class LocalLogger<Scope extends string = string> {
     extra?: Record<string, unknown>
   ) {
     this.push('error', scope, action, {
-      message: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
+      // Serialized here, not left to `push`'s `toLoggable`: an `Error`'s
+      // `name`, `message`, and `stack` aren't enumerable, so spreading the
+      // `Error` itself would drop them.
+      ...(isError(error) ? serializeError(error) : { thrown: error }),
       ...extra,
     })
   }
@@ -98,7 +106,8 @@ export class LocalLogger<Scope extends string = string> {
       ...(level !== 'info' && { level }),
       scope,
       action,
-      detail,
+      // Copied now, so it saves as it was when logged.
+      detail: toLoggable(detail),
     }
     this.unsavedEntries.push(entry)
     if (this.unsavedEntries.length > this.maxEntries) {

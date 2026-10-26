@@ -13,15 +13,45 @@ const getLastEntry = () => localLog.getEntries().at(-1)
 const leavePage = () => window.dispatchEvent(new Event('pagehide'))
 
 describe('LocalLogger.error', () => {
-  it('logs an Error as its message and stack, beside extra', () => {
+  it('logs an Error spelled out, beside extra', () => {
     const ERROR = new Error('boom')
     localLog.error('api', 'items.list:failed', ERROR, { status: 500 })
-    expect(getLastEntry()).toMatchObject({
+    expect(getLastEntry()).toEqual({
+      timestamp: expect.any(String),
       level: 'error',
       scope: 'api',
       action: 'items.list:failed',
-      detail: { message: 'boom', stack: ERROR.stack, status: 500 },
+      detail: {
+        name: 'Error',
+        message: 'boom',
+        stack: ERROR.stack,
+        status: 500,
+      },
     })
+  })
+
+  it('logs an Error as its name, cause, and own fields too', () => {
+    const CAUSE = new RangeError('inner')
+    const ERROR = Object.assign(new TypeError('outer', { cause: CAUSE }), {
+      code: 'E_FETCH',
+    })
+    localLog.error('api', 'items.list:failed', ERROR)
+    expect(getLastEntry()?.detail).toEqual({
+      name: 'TypeError',
+      message: 'outer',
+      stack: ERROR.stack,
+      code: 'E_FETCH',
+      // Spelled out the same way, rather than as the `{}` JSON makes of it.
+      cause: { name: 'RangeError', message: 'inner', stack: CAUSE.stack },
+    })
+  })
+
+  it('logs anything else thrown as it is, under thrown', () => {
+    // An object as well as a string: String() would make it '[object Object]'.
+    for (const THROWN of ['offline', { status: 404 }]) {
+      localLog.error('api', 'items.list:rejected', THROWN)
+      expect(getLastEntry()?.detail, String(THROWN)).toEqual({ thrown: THROWN })
+    }
   })
 })
 
@@ -143,6 +173,16 @@ describe('LocalLogger persistence', () => {
     expect(entries).toHaveLength(300)
     // The newest, not the oldest.
     expect(entries.at(-1)).toMatchObject({ action: 'stored:399' })
+  })
+
+  it('saves an Error inside any detail spelled out', () => {
+    const logger = reload()
+    logger.warn('sync', 'retry', { attempt: 2, last: new Error('timeout') })
+    leavePage()
+    expect(reload().getEntries().at(-1)?.detail).toMatchObject({
+      attempt: 2,
+      last: { name: 'Error', message: 'timeout' },
+    })
   })
 
   it('starts over from a stored value it cannot read', () => {

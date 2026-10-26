@@ -7,6 +7,7 @@
 
 // A dev dependency, inlined by the build -- see `tsdown.config.ts`.
 import { onAppLeave } from '@bvandrc/react-ui-hooks'
+import { sortBy } from 'es-toolkit'
 
 /** `info` is the default, and the one level an entry leaves unsaid. */
 export type LogLevel = 'info' | 'warn' | 'error'
@@ -21,10 +22,12 @@ export interface LogEntry {
 }
 
 export interface LocalLoggerOptions {
-  /** The localStorage key the log persists under. */
+  /** The localStorage key the log persists under. Must not be empty. */
   storageKey: string
   /**
    * How many entries to keep, newest first.
+   *
+   * Must be a positive integer: the constructor throws a `RangeError` otherwise.
    *
    * @default 300
    */
@@ -43,6 +46,14 @@ export class LocalLogger<Scope extends string = string> {
   private unsavedEntries: LogEntry[] = []
 
   constructor({ storageKey, maxEntries = 300 }: LocalLoggerOptions) {
+    if (storageKey.length === 0) {
+      throw new RangeError('storageKey must not be empty')
+    }
+    if (!Number.isInteger(maxEntries) || maxEntries < 1) {
+      throw new RangeError(
+        `maxEntries must be a positive integer, got ${maxEntries}`
+      )
+    }
     this.storageKey = storageKey
     this.maxEntries = maxEntries
     // No page to leave while rendering on a server, and nothing to persist to.
@@ -127,14 +138,10 @@ export class LocalLogger<Scope extends string = string> {
     } catch {
       // Unparseable, or storage blocked: start over too.
     }
-    return (
-      [...stored, ...this.unsavedEntries]
-        // Tabs append in the order they write, not the order they logged in.
-        // ISO timestamps sort as strings, and the sort is stable for ties.
-        .sort((a, b) =>
-          a.timestamp < b.timestamp ? -1 : a.timestamp > b.timestamp ? 1 : 0
-        )
-        .slice(-this.maxEntries)
+    // Tabs append in the order they write, not the order they logged in.
+    // ISO timestamps sort as strings, and the sort is stable for ties.
+    return sortBy([...stored, ...this.unsavedEntries], ['timestamp']).slice(
+      -this.maxEntries
     )
   }
 

@@ -52,7 +52,7 @@ Saving runs on `visibilitychange` to hidden as well as `pagehide`, since a phone
 
 ### `toLoggable(value)`
 
-A copy of `value` as JSON will save it, which the logger runs every `detail` through, built on `serialize-error`. An `Error` at any depth is spelled out with its `name`, `message`, `stack`, `cause`, `errors`, and own fields such as `code`, where JSON alone makes it `{}`. A loop is cut to `'[Circular]'`, and anything with a `toJSON`, like a `Date`, saves as that gives it. Useful for a report built outside the logger:
+A copy of `value` that saves cleanly as JSON: any `Error` in it is spelled out rather than saved as `{}`, and circular references are cut. The logger runs every `detail` through it, and it's handy for a report built outside the logger:
 
 ```ts
 import { toLoggable } from 'local-logger'

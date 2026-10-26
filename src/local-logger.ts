@@ -87,6 +87,9 @@ export class LocalLogger<Scope extends string = string> {
     extra?: Record<string, unknown>
   ) {
     this.push('error', scope, action, {
+      // Serialized here, not left to `push`'s `toLoggable`: an `Error`'s
+      // `name`, `message`, and `stack` aren't enumerable, so spreading the
+      // `Error` itself would drop them.
       ...(isError(error) ? serializeError(error) : { thrown: error }),
       ...extra,
     })

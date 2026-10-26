@@ -75,8 +75,8 @@ export class LocalLogger<Scope extends string = string> {
 
   /**
    * Logs a failure, with the thrown value spelled out beside `extra`: an
-   * `Error`'s `name`, `message`, `stack`, `cause`, and own fields, or a non-Error
-   * as its string `message`.
+   * `Error`'s `name`, `message`, `stack`, `cause`, and own fields, or anything
+   * else thrown as it is, under `thrown`.
    */
   error(
     scope: Scope,
@@ -85,7 +85,7 @@ export class LocalLogger<Scope extends string = string> {
     extra?: Record<string, unknown>
   ) {
     this.push('error', scope, action, {
-      ...(isError(error) ? serializeError(error) : { message: String(error) }),
+      ...(isError(error) ? serializeError(error) : { thrown: error }),
       ...extra,
     })
   }

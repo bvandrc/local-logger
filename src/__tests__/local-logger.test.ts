@@ -46,9 +46,12 @@ describe('LocalLogger.error', () => {
     })
   })
 
-  it('logs a thrown non-Error as its string, with no stack', () => {
-    localLog.error('api', 'items.list:rejected', 'offline')
-    expect(getLastEntry()?.detail).toEqual({ message: 'offline' })
+  it('logs anything else thrown as it is, under thrown', () => {
+    // An object as well as a string: String() would make it '[object Object]'.
+    for (const THROWN of ['offline', { status: 404 }]) {
+      localLog.error('api', 'items.list:rejected', THROWN)
+      expect(getLastEntry()?.detail, String(THROWN)).toEqual({ thrown: THROWN })
+    }
   })
 })
 

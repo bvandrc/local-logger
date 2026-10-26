@@ -34,7 +34,8 @@ export interface LocalLoggerOptions {
    *
    * The oldest entries go first, and an entry too long to fit on its own is
    * never stored. The default is a tenth of what browsers commonly give an
-   * origin's localStorage.
+   * origin's localStorage. Must be a positive integer: the constructor throws a
+   * `RangeError` otherwise.
    *
    * @default 500_000
    */
@@ -79,6 +80,11 @@ export class LocalLogger<Scope extends string = string> {
     maxEntries = 300,
     maxStoredLength = 500_000,
   }: LocalLoggerOptions) {
+    if (!Number.isInteger(maxStoredLength) || maxStoredLength < 1) {
+      throw new RangeError(
+        `maxStoredLength must be a positive integer, got ${maxStoredLength}`
+      )
+    }
     this.storageKey = storageKey
     this.maxEntries = maxEntries
     this.maxStoredLength = maxStoredLength

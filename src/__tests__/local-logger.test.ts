@@ -208,17 +208,20 @@ describe('LocalLogger persistence', () => {
     expect(actions).not.toContain('fit:0')
   })
 
-  it('never stores an entry too long to fit on its own', () => {
+  it('stores an entry too long to fit on its own without its detail', () => {
     const logger = reload({ maxStoredLength: 1000 })
     logger.info('cart', 'small:before')
     logger.info('cart', 'huge', 'x'.repeat(2000))
     leavePage()
-    const actions = reload()
-      .getEntries()
-      .map(({ action }) => action)
-    expect(actions).not.toContain('huge')
-    // Not pushed out by the entry that was skipped.
-    expect(actions).toContain('small:before')
+    const entries = reload().getEntries()
+    expect(entries.at(-1)).toEqual({
+      timestamp: expect.any(String),
+      scope: 'cart',
+      action: 'huge',
+      detail: '[Omitted: too long to store]',
+    })
+    // Not pushed out by the entry that was too long.
+    expect(entries.map(({ action }) => action)).toContain('small:before')
   })
 
   it('logs to memory where there is no document, as on a server', () => {

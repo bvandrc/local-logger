@@ -39,8 +39,9 @@ export interface LocalLoggerOptions {
    * How long the stored log may grow, in characters of its JSON.
    *
    * The oldest entries go first, and an entry too long to fit on its own is
-   * never stored. The default is a tenth of what browsers commonly give an
-   * origin's localStorage. Must be a positive integer: the constructor throws a
+   * stored with its `detail` replaced by `'[Omitted: too long to store]'`. The
+   * default is a tenth of what browsers commonly give an origin's
+   * localStorage. Must be a positive integer: the constructor throws a
    * `RangeError` otherwise.
    *
    * @default 500_000
@@ -50,13 +51,20 @@ export interface LocalLoggerOptions {
 
 /** The newest of `entries`, as one JSON array no longer than `maxLength`. */
 const serializeNewest = (entries: LogEntry[], maxLength: number) => {
-  // Each entry is serialized once, and the array is joined by hand rather than
-  // serialized again, so the length counted is the length written.
+  // The array is joined by hand rather than serialized again, so the length
+  // counted is the length written.
+  const fits = (serialized: string) => serialized.length + 2 <= maxLength
   const fitting = entries
-    .map((entry) => JSON.stringify(entry))
-    // Too long on its own, with the brackets: skipped, so it can't push out
-    // everything older.
-    .filter((serialized) => serialized.length + 2 <= maxLength)
+    .map((entry) => {
+      const serialized = JSON.stringify(entry)
+      // Too long on its own, with the brackets: its `detail` is dropped, so it
+      // can't push out everything older, and it's skipped if that still won't
+      // fit.
+      return fits(serialized)
+        ? serialized
+        : JSON.stringify({ ...entry, detail: '[Omitted: too long to store]' })
+    })
+    .filter(fits)
   // The opening bracket, then each entry with the comma or closing bracket
   // after it.
   let length = 1

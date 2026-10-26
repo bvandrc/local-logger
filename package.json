@@ -1,7 +1,7 @@
 {
   "name": "local-logger",
   "version": "0.1.0",
-  "description": "A capped, persistent on-device log for browser diagnostics reports, kept in localStorage so it survives reloads, app updates, and a phone killing a backgrounded tab. Framework-agnostic, with optional React hooks.",
+  "description": "A persistent on-device log for browser diagnostics reports, kept in localStorage so it survives reloads, app updates, and a phone killing a backgrounded tab. Framework-agnostic, with optional React hooks.",
   "keywords": [
     "logger",
     "logging",
@@ -47,7 +47,6 @@
     "ts:check": "tsc",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:isolated": "vitest run --isolate",
     "check": "pnpm run ts:check && pnpm run lint",
     "prepublishOnly": "pnpm run check && pnpm run test && pnpm run build"
   },

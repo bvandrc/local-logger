@@ -1,6 +1,6 @@
 # local-logger
 
-A capped, persistent on-device log for browser diagnostics reports. It's kept in `localStorage`, so a report still covers what happened before a reload, an app update, or a phone killing a backgrounded tab. Framework-agnostic, with optional React hooks.
+A persistent on-device log for browser diagnostics reports. It's kept in `localStorage`, so a report still covers what happened before a reload, an app update, or a phone killing a backgrounded tab. Framework-agnostic, with optional React hooks.
 
 ```bash
 npm install local-logger

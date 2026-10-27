@@ -11,6 +11,7 @@ Conventions live outside this file, synced from https://github.com/bvandrc/bvand
 @conventions/ts-testing-all.md — testing rules shared by every TypeScript suite: test IDs, naming, assertions
 @conventions/ts-unit-testing.md — TypeScript unit test layout, naming, fixtures, and assertions
 @conventions/all.md — practice for every repo: branches, formatting, comments, testing, markdown, PR reviews
+@conventions/npm-publishing.md — releasing, trusted publishing, `package.json` publish fields, versioning
 
 ## Commands
 
@@ -22,10 +23,6 @@ Conventions live outside this file, synced from https://github.com/bvandrc/bvand
 | `pnpm run ts:check` | TypeScript check |
 | `pnpm run test` | Vitest unit tests (single run) |
 | `pnpm run check` | ts + lint (lint includes the format check); `prepublishOnly` runs it, then `test` and `build` |
-
-## Releasing
-
-Bump `version` in `package.json`, merge, then publish a GitHub release tagged `v<version>`. `.github/workflows/release.yml` checks the tag matches and runs `pnpm stage publish` with provenance, which leaves the version staged: approve it on npmjs.com with 2FA to publish it.
 
 ## Gotchas
 

@@ -163,6 +163,33 @@ describe('PersistentLogger persistence', () => {
     expect(writtenKeys).toEqual([STORAGE_KEY])
   })
 
+  it('warns on the console once when saves keep failing', async () => {
+    const QUOTA_ERROR = new DOMException('full', 'QuotaExceededError')
+    // `logToConsole` left off: the warning doesn't wait to be asked for.
+    const logger = reload()
+    const warnSpy = vi
+      .spyOn(console, 'warn')
+      .mockImplementation(() => undefined)
+    const setItemSpy = vi
+      .spyOn(localStorage, 'setItem')
+      .mockImplementation(() => {
+        throw QUOTA_ERROR
+      })
+    for (const ACTION of ['full:1', 'full:2']) {
+      logger.error('sync', ACTION, new Error('offline'))
+      await Promise.resolve()
+    }
+    const writeCount = setItemSpy.mock.calls.length
+    const warnings = [...warnSpy.mock.calls]
+    warnSpy.mockRestore()
+    setItemSpy.mockRestore()
+    // Both saves were tried, so one warning isn't just one failure.
+    expect(writeCount).toBe(2)
+    expect(warnings).toEqual([
+      [expect.stringContaining(STORAGE_KEY), QUOTA_ERROR],
+    ])
+  })
+
   it('leaves info and warn unsaved until the page hides', async () => {
     const logger = reload()
     logger.info('cart', 'unsaved:info')

@@ -35,7 +35,7 @@ Logging only appends to memory. The log is written to storage when the page is h
 | --- | --- | --- |
 | `storageKey` | (required) | The `localStorage` key the log persists under. Must not be empty. |
 | `maxEntries` | `300` | How many entries to keep; the oldest go first. Must be a positive integer. |
-| `logToConsole` | `false` | Whether to echo each entry to `console.info`, `console.warn`, or `console.error` as it's logged, and to warn there when the log can't be saved to storage. |
+| `logToConsole` | `false` | Whether to echo each entry to `console.info`, `console.warn`, or `console.error` as it's logged. |
 
 | Method | What it does |
 | --- | --- |
@@ -49,7 +49,7 @@ Logging only appends to memory. The log is written to storage when the page is h
 
 Each entry is a `LogEntry`: `{ timestamp, level?, scope, action, detail? }`, where `timestamp` is an ISO string and `level` is left out at `info`, so only the levels worth noticing show. A `detail` is copied as it's logged, with any `Error` in it spelled out the same way (JSON alone makes one `{}`) and any circular reference saved as `'[Circular]'`.
 
-Saving runs on `visibilitychange` to hidden as well as `pagehide`, since a phone can kill a backgrounded app without `pagehide` ever firing. Each save re-reads storage first, so tabs open at once all keep what they logged.
+Saving runs on `visibilitychange` to hidden as well as `pagehide`, since a phone can kill a backgrounded app without `pagehide` ever firing. Each save re-reads storage first, so tabs open at once all keep what they logged. A save that fails, as on full or blocked storage, never throws: what it couldn't write stays in memory for the next try, and the logger warns on the console the first time, whatever `logToConsole` says, so a log that isn't being kept doesn't go unnoticed.
 
 ### `toLoggable(value)`
 

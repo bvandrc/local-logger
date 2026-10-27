@@ -57,6 +57,8 @@ export class PersistentLogger<Scope extends string = string> {
   private unsavedEntries: LogEntry[] = []
   /** Whether a save is already queued for an error just logged. */
   private isSaveQueued = false
+  /** Whether a failed save has already been warned of, so it's warned once. */
+  private hasWarnedSaveFailed = false
 
   constructor({
     storageKey,
@@ -218,8 +220,17 @@ export class PersistentLogger<Scope extends string = string> {
       // Written now, so the next write must not append them again. Only on
       // success: a failed write keeps them for the next try.
       this.unsavedEntries = []
-    } catch {
-      // Storage full or blocked: the log must never be what breaks the app.
+    } catch (error) {
+      // Storage full or blocked: the log must never be what breaks the app, so
+      // this only warns. Whatever blocked this save usually blocks every one
+      // after it, so once is enough to say the log isn't being kept.
+      if (!this.hasWarnedSaveFailed) {
+        this.hasWarnedSaveFailed = true
+        console.warn(
+          `[persistent-logger] couldn't save the log under "${this.storageKey}"`,
+          error
+        )
+      }
     }
   }
 }

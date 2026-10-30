@@ -66,8 +66,12 @@ JSON.stringify(toLoggable({ failed: new TypeError('offline') }))
 ```ts
 import { createPersistentLogger } from 'persistent-logger/react'
 
-export const { logger: log, useLogDuration, useLogOnChange, useLogOnce } =
-  createPersistentLogger<Scope>({ storageKey: 'my-app-log' })
+export const {
+  logger: log,
+  useLogDuration,
+  useLogOnChange,
+  useLogOnce,
+} = createPersistentLogger<Scope>({ storageKey: 'my-app-log' })
 ```
 
 `getLoggerHooks(logger)` gives the same hooks for a `PersistentLogger` you already have.

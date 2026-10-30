@@ -6,12 +6,12 @@ A persistent on-device log for browser diagnostics reports, with optional React 
 
 Conventions live outside this file, synced from https://github.com/bvandrc/bvandrc-conventions by `.github/workflows/sync-conventions.yml` — follow all of them, and edit a rule upstream rather than in `conventions/`, which every sync overwrites:
 
-@conventions/typescript.md — language-level TypeScript/JavaScript rules
-@conventions/react.md — component, JSX, folder layout, and accessibility rules
-@conventions/ts-testing-all.md — testing rules shared by every TypeScript suite: test IDs, naming, assertions
-@conventions/ts-unit-testing.md — TypeScript unit test layout, naming, fixtures, and assertions
-@conventions/all.md — practice for every repo: branches, formatting, comments, testing, markdown, PR reviews
-@conventions/npm-publishing.md — releasing, trusted publishing, `package.json` publish fields, versioning
+- @conventions/typescript.md — language-level TypeScript/JavaScript rules
+- @conventions/react.md — component, JSX, folder layout, and accessibility rules
+- @conventions/ts-testing-all.md — testing rules shared by every TypeScript suite: test IDs, naming, assertions
+- @conventions/ts-unit-testing.md — TypeScript unit test layout, naming, fixtures, and assertions
+- @conventions/all.md — practice for every repo: branches, formatting, comments, testing, writing, PR reviews
+- @conventions/npm-publishing.md — releasing, trusted publishing, `package.json` publish fields, versioning
 
 ## Commands
 

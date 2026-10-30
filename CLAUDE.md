@@ -15,14 +15,14 @@ Conventions live outside this file, synced from https://github.com/bvandrc/bvand
 
 ## Commands
 
-| Command | Purpose |
-| --- | --- |
-| `pnpm run build` | Build `dist/` with tsdown: bundled ESM plus `.d.mts` types |
-| `pnpm run format` | Biome format — **run before every commit** |
-| `pnpm run lint` | Biome lint and format check |
-| `pnpm run ts:check` | TypeScript check |
-| `pnpm run test` | Vitest unit tests (single run) |
-| `pnpm run check` | ts + lint (lint includes the format check); `prepublishOnly` runs it, then `test` and `build` |
+| Command             | Purpose                                                                                       |
+| ------------------- | --------------------------------------------------------------------------------------------- |
+| `pnpm run build`    | Build `dist/` with tsdown: bundled ESM plus `.d.mts` types                                    |
+| `pnpm run format`   | Biome format — **run before every commit**                                                    |
+| `pnpm run lint`     | Biome lint and format check                                                                   |
+| `pnpm run ts:check` | TypeScript check                                                                              |
+| `pnpm run test`     | Vitest unit tests (single run)                                                                |
+| `pnpm run check`    | ts + lint (lint includes the format check); `prepublishOnly` runs it, then `test` and `build` |
 
 ## Gotchas
 

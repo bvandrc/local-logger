@@ -31,21 +31,21 @@ Logging only appends to memory. The log is written to storage when the page is h
 
 ### `new PersistentLogger<Scope>(options)`
 
-| Option | Default | What it does |
-| --- | --- | --- |
-| `storageKey` | (required) | The `localStorage` key the log persists under. Must not be empty. |
-| `maxEntries` | `300` | How many entries to keep; the oldest go first. Must be a positive integer. |
-| `logToConsole` | `false` | Whether to echo each entry to `console.info`, `console.warn`, or `console.error` as it's logged. |
+| Option         | Default    | What it does                                                                                     |
+| -------------- | ---------- | ------------------------------------------------------------------------------------------------ |
+| `storageKey`   | (required) | The `localStorage` key the log persists under. Must not be empty.                                |
+| `maxEntries`   | `300`      | How many entries to keep; the oldest go first. Must be a positive integer.                       |
+| `logToConsole` | `false`    | Whether to echo each entry to `console.info`, `console.warn`, or `console.error` as it's logged. |
 
-| Method | What it does |
-| --- | --- |
-| `info(scope, action, detail?)` | Logs an entry. |
-| `warn(scope, action, detail?)` | Logs an entry at `warn`. |
+| Method                                | What it does                                                                                                                                                                                                         |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `info(scope, action, detail?)`        | Logs an entry.                                                                                                                                                                                                       |
+| `warn(scope, action, detail?)`        | Logs an entry at `warn`.                                                                                                                                                                                             |
 | `error(scope, action, error, extra?)` | Logs a caught error at `error`, along with any `extra` details, and writes it to storage straight away. An `Error` is saved as its `name`, `message`, `stack`, and `cause`, plus any fields of its own, like `code`. |
-| `catchTo(scope, action)` | A `.catch` handler that logs the rejection via `error` and swallows it. |
-| `withScope(scope)` | The same four methods with `scope` already filled in, for a module that logs under one scope throughout. |
-| `getEntries()` | Every entry still kept, across sessions and tabs, oldest first. |
-| `clear()` | Empties the log, both what's stored and what this page hasn't saved yet. |
+| `catchTo(scope, action)`              | A `.catch` handler that logs the rejection via `error` and swallows it.                                                                                                                                              |
+| `withScope(scope)`                    | The same four methods with `scope` already filled in, for a module that logs under one scope throughout.                                                                                                             |
+| `getEntries()`                        | Every entry still kept, across sessions and tabs, oldest first.                                                                                                                                                      |
+| `clear()`                             | Empties the log, both what's stored and what this page hasn't saved yet.                                                                                                                                             |
 
 Each entry is a `LogEntry`: `{ timestamp, level?, scope, action, detail? }`, where `timestamp` is an ISO string and `level` is left out at `info`, so only the levels worth noticing show. A `detail` is copied as it's logged, with any `Error` in it spelled out the same way (JSON alone makes one `{}`) and any circular reference saved as `'[Circular]'`.
 
@@ -66,17 +66,21 @@ JSON.stringify(toLoggable({ failed: new TypeError('offline') }))
 ```ts
 import { createPersistentLogger } from 'persistent-logger/react'
 
-export const { logger: log, useLogDuration, useLogOnChange, useLogOnce } =
-  createPersistentLogger<Scope>({ storageKey: 'my-app-log' })
+export const {
+  logger: log,
+  useLogDuration,
+  useLogOnChange,
+  useLogOnce,
+} = createPersistentLogger<Scope>({ storageKey: 'my-app-log' })
 ```
 
 `getLoggerHooks(logger)` gives the same hooks for a `PersistentLogger` you already have.
 
-| Hook | What it does |
-| --- | --- |
-| `useLogDuration(scope, action, active)` | Logs `<action>:start` when `active` turns true, and `<action>:end` with the milliseconds it lasted when it turns false or the component unmounts. |
-| `useLogOnChange(scope, action, value)` | Logs `value` on mount and whenever it changes. Compared by identity, so pass a primitive or a stable reference. |
-| `useLogOnce(scope, action, when, detail?)` | Logs once, the first render `when` is true, with `detail` as it stands on that render. |
+| Hook                                       | What it does                                                                                                                                      |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `useLogDuration(scope, action, active)`    | Logs `<action>:start` when `active` turns true, and `<action>:end` with the milliseconds it lasted when it turns false or the component unmounts. |
+| `useLogOnChange(scope, action, value)`     | Logs `value` on mount and whenever it changes. Compared by identity, so pass a primitive or a stable reference.                                   |
+| `useLogOnce(scope, action, when, detail?)` | Logs once, the first render `when` is true, with `detail` as it stands on that render.                                                            |
 
 ## License
 
